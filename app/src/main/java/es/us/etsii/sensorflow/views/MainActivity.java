@@ -7,7 +7,6 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
-import java.util.List;
 import javax.inject.Inject;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -40,11 +39,6 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-
-        List<Sensor> mList= mSensorManager.getSensorList(Sensor.TYPE_ALL);
-        for (int i = 1; i < mList.size(); i++) {
-            testTextView.append("\n" + mList.get(i).getType() + "\n" + mList.get(i).getVendor());
-        }
     }
 
     // --------------------------- STATES ----------------------------
@@ -52,7 +46,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     @Override
     protected void onResume() {
         super.onResume();
-        int frequency = 10 * Constants.S2US;
+        int frequency = 20 * Constants.MS2US;
 
         for(Sensor sensor : mCriticalSensors) {
             // Check existence, despite the Manifest requirements, a user can sideload the apk
@@ -79,18 +73,23 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     public void onSensorChanged(SensorEvent sensorEvent) {
         switch (sensorEvent.sensor.getType()){
             case Sensor.TYPE_GYROSCOPE:
-                Log.e(TAG, "onSensorChanged G: " + sensorEvent.values[0]);
+                Log.e(TAG, "Gyroscope X: " + sensorEvent.values[0]);
+                Log.e(TAG, "Gyroscope Y: " + sensorEvent.values[1]);
+                Log.e(TAG, "Gyroscope Z: " + sensorEvent.values[2]);
                 break;
             case Sensor.TYPE_ACCELEROMETER:
-                Log.e(TAG, "onSensorChanged A: " + sensorEvent.values[0]);
+                Log.e(TAG, "Accelerometer X: " + sensorEvent.values[0]);
+                Log.e(TAG, "Accelerometer Y: " + sensorEvent.values[1]);
+                Log.e(TAG, "Accelerometer Z: " + sensorEvent.values[2]);
                 break;
             case Sensor.TYPE_PRESSURE:
-                Log.e(TAG, "onSensorChanged P: " + sensorEvent.values[0]);
+                Log.e(TAG, "Barometer X: " + sensorEvent.values[0]);
+                Log.e(TAG, "Barometer Y: " + sensorEvent.values[1]);
+                Log.e(TAG, "Barometer Z: " + sensorEvent.values[2]);
                 break;
             case Sensor.TYPE_MAGNETIC_FIELD:
-                Log.e(TAG, "onSensorChanged M: " + sensorEvent.values[0]);
+                Log.e(TAG, "Magnetometer: " + sensorEvent.values[0]);
                 break;
-
             default:
                 Log.e(TAG, "Unsupervised sensor change");
         }
