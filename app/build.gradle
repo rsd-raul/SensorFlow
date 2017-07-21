@@ -1,15 +1,19 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 26
+    compileSdkVersion 25
     buildToolsVersion "26.0.0"
     defaultConfig {
         applicationId "es.us.etsii.sensorflow"
         minSdkVersion 19
-        targetSdkVersion 26
+        targetSdkVersion 25
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        // JAVA 8 -----
+//        jackOptions { enabled true }
+        // JAVA 8 -----
     }
     buildTypes {
         release {
@@ -17,6 +21,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    // JAVA 8 -----
+//    compileOptions {
+//        sourceCompatibility JavaVersion.VERSION_1_8
+//        targetCompatibility JavaVersion.VERSION_1_8
+//    }
+    // JAVA 8 -----
 }
 
 dependencies {
@@ -27,10 +38,10 @@ dependencies {
     testCompile 'junit:junit:4.12'
 
     // Support - Google
-    compile 'com.android.support:recyclerview-v7:26.0.0-alpha1'
-    compile 'com.android.support:appcompat-v7:26.0.0-alpha1'
-//    compile 'com.android.support:design:26.0.0-alpha1'
-//    compile 'com.android.support:palette-v7:26.0.0-alpha1'
+    compile 'com.android.support:recyclerview-v7:25.3.1'
+    compile 'com.android.support:appcompat-v7:25.3.1'
+//    compile 'com.android.support:design:25.3.1'
+//    compile 'com.android.support:palette-v7:25.3.1'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
 
     // Dagger 2 - Google - https://github.com/google/dagger/releases
@@ -40,4 +51,7 @@ dependencies {
     // ButterKnife - Jake Wharton - https://github.com/JakeWharton/butterknife
     compile 'com.jakewharton:butterknife:8.7.0'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.7.0'
+
+    // MaterialDialogs - Aidan Follestad - https://github.com/afollestad/material-dialogs
+    compile 'com.afollestad.material-dialogs:commons:0.9.4.5'
 }

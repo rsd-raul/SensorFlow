@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Sensor Flow</string>
+    <string name="sensor_missing">Required Sensor Missing</string>
+    <string name="sensor_missing_description">One of the following sensors is not present:
+        \n\lBarometer\n\lAccelerometer\n\lMagnetometer\n\lGyroscope
+    </string>
+    <string name="close_app">Close application</string>
 </resources>
