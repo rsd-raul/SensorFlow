@@ -5,11 +5,23 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.Animation;
+import android.view.animation.ScaleAnimation;
 import android.widget.TextView;
+
+import java.util.List;
+
 import javax.inject.Inject;
 import butterknife.BindView;
+import butterknife.BindViews;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import es.us.etsii.sensorflow.App;
 import es.us.etsii.sensorflow.R;
 import es.us.etsii.sensorflow.utils.Constants;
@@ -23,9 +35,14 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
     // ------------------------- ATTRIBUTES --------------------------
 
-    @BindView(R.id.tester) TextView testTextView;
+    @BindView(R.id.startAndStopFAB) FloatingActionButton startAndStopFAB;
     @Inject SensorManager mSensorManager;
     @Inject Sensor[] mCriticalSensors;
+    @BindViews({ R.id.tv_bar_x, R.id.tv_bar_y, R.id.tv_bar_z, R.id.tv_ace_x, R.id.tv_ace_y,
+            R.id.tv_ace_z, R.id.tv_gyro_x, R.id.tv_gyro_y, R.id.tv_gyro_z, R.id.tv_mag_u})
+    List<TextView> allSensorViews;
+    private static float[] allSensorData = new float[10];
+    private boolean RUNNING = false, WAS_RUNNING = false;
 
     // ------------------------- CONSTRUCTOR -------------------------
 
@@ -46,49 +63,123 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     @Override
     protected void onResume() {
         super.onResume();
-        int frequency = 20 * Constants.MS2US;
 
-        for(Sensor sensor : mCriticalSensors) {
-            // Check existence, despite the Manifest requirements, a user can sideload the apk
-            if(sensor == null)
-                DialogUtils.criticalErrorDialog(this, R.string.sensor_missing,R.string.sensor_missing_description);
-            else
-                mSensorManager.registerListener(this, sensor, frequency);
-        }
+        if(!WAS_RUNNING)
+            return;
+
+        // If the service was running, restart it and star the UI updater
+        registerSensorListener();
+        updateSensorValuesUI();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         mSensorManager.unregisterListener(this);
+
+        WAS_RUNNING = RUNNING;
+        RUNNING = false;
     }
 
     // ------------------------- AUXILIARY ---------------------------
 
     // -------------------------- USE CASES --------------------------
 
+    private void registerSensorListener(){
+        int frequency = 20 * Constants.MS2US;
+
+        for(Sensor sensor : mCriticalSensors) {
+            // Check existence, despite the Manifest requirements, a user can side-load the apk
+            if(sensor == null)
+                DialogUtils.criticalErrorDialog(this, R.string.sensor_missing, R.string.sensor_missing_description);
+            else
+                mSensorManager.registerListener(this, sensor, frequency);
+        }
+    }
+
+    /**
+     * Once every UI_REFRESH_RATE_MS update all sensor values with the data stored in allSensorData.
+     */
+    private void updateSensorValuesUI() {
+        RUNNING = true;
+
+        // Using a handler to create a recurrent task
+        final Handler h = new Handler();
+        h.postDelayed(new Runnable(){
+            public void run(){
+                // Apply the same action to all the views
+                ButterKnife.apply(allSensorViews, UPDATE);
+
+                if(RUNNING)
+                    h.postDelayed(this, Constants.UI_REFRESH_RATE_MS);
+            }
+        }, Constants.UI_REFRESH_RATE_MS);
+    }
+
+    @OnClick(R.id.startAndStopFAB)
+    void clickRunAndStop(){
+        int dra, col;
+
+        // Toggle run and stop
+        RUNNING = !RUNNING;
+
+        // Depending on the action required, stop or start the service (and customize FAB)
+        if(RUNNING) {
+            dra = R.drawable.ic_stop_24dp;
+            col = R.color.redDark;
+
+            // Start service and UI updater
+            registerSensorListener();
+            updateSensorValuesUI();
+        } else {
+            dra = R.drawable.ic_run_24dp;
+            col = R.color.tealDark;
+
+            // Stop service
+            mSensorManager.unregisterListener(this);
+        }
+
+        // Change colors and function
+        startAndStopFAB.setImageResource(dra);
+        startAndStopFAB.setBackgroundTintList(ContextCompat.getColorStateList(MainActivity.this, col));
+
+        // Animate changes
+        ScaleAnimation expandAnimation = new ScaleAnimation(0f, 1f, 0f, 1f,
+                Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+        expandAnimation.setDuration(150);
+        expandAnimation.setInterpolator(new AccelerateInterpolator());
+        startAndStopFAB.startAnimation(expandAnimation);
+    }
+
+    // -------------------------- INTERFACE --------------------------
+
+    private final ButterKnife.Action<TextView> UPDATE = new ButterKnife.Action<TextView>() {
+        @Override public void apply(@NonNull TextView view, int index) {
+            view.setText(String.valueOf(allSensorData[index]));
+        }
+    };
+
     // -------------------------- LISTENER ---------------------------
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         switch (sensorEvent.sensor.getType()){
-            case Sensor.TYPE_GYROSCOPE:
-                Log.e(TAG, "Gyroscope X: " + sensorEvent.values[0]);
-                Log.e(TAG, "Gyroscope Y: " + sensorEvent.values[1]);
-                Log.e(TAG, "Gyroscope Z: " + sensorEvent.values[2]);
+            case Sensor.TYPE_PRESSURE:
+                allSensorData[0] = sensorEvent.values[0];
+                allSensorData[1] = sensorEvent.values[1];
+                allSensorData[2] = sensorEvent.values[2];
                 break;
             case Sensor.TYPE_ACCELEROMETER:
-                Log.e(TAG, "Accelerometer X: " + sensorEvent.values[0]);
-                Log.e(TAG, "Accelerometer Y: " + sensorEvent.values[1]);
-                Log.e(TAG, "Accelerometer Z: " + sensorEvent.values[2]);
+                allSensorData[3] = sensorEvent.values[0];
+                allSensorData[4] = sensorEvent.values[1];
+                allSensorData[5] = sensorEvent.values[2];
                 break;
-            case Sensor.TYPE_PRESSURE:
-                Log.e(TAG, "Barometer X: " + sensorEvent.values[0]);
-                Log.e(TAG, "Barometer Y: " + sensorEvent.values[1]);
-                Log.e(TAG, "Barometer Z: " + sensorEvent.values[2]);
-                break;
+            case Sensor.TYPE_GYROSCOPE:
+                allSensorData[6] = sensorEvent.values[0];
+                allSensorData[7] = sensorEvent.values[1];
+                allSensorData[8] = sensorEvent.values[2];
             case Sensor.TYPE_MAGNETIC_FIELD:
-                Log.e(TAG, "Magnetometer: " + sensorEvent.values[0]);
+                allSensorData[9] = sensorEvent.values[0];
                 break;
             default:
                 Log.e(TAG, "Unsupervised sensor change");
