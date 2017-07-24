@@ -54,4 +54,7 @@ dependencies {
 
     // MaterialDialogs - Aidan Follestad - https://github.com/afollestad/material-dialogs
     compile 'com.afollestad.material-dialogs:commons:0.9.4.5'
+
+    // Tensorflow - Google - https://www.tensorflow.org/
+    compile 'org.tensorflow:tensorflow-android:1.2.0'
 }

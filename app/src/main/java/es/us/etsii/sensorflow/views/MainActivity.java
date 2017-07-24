@@ -13,8 +13,9 @@ import android.util.Log;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
+import android.widget.ImageView;
 import android.widget.TextView;
-
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -24,6 +25,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import es.us.etsii.sensorflow.App;
 import es.us.etsii.sensorflow.R;
+import es.us.etsii.sensorflow.TensorFlowClassifier;
 import es.us.etsii.sensorflow.utils.Constants;
 import es.us.etsii.sensorflow.utils.DialogUtils;
 
@@ -36,6 +38,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     // ------------------------- ATTRIBUTES --------------------------
 
     @BindView(R.id.startAndStopFAB) FloatingActionButton startAndStopFAB;
+    @BindView(R.id.iv_current_activity) ImageView currentActivity;
     @Inject SensorManager mSensorManager;
     @Inject Sensor[] mCriticalSensors;
     @BindViews({ R.id.tv_bar_x, R.id.tv_bar_y, R.id.tv_bar_z, R.id.tv_ace_x, R.id.tv_ace_y,
@@ -43,6 +46,13 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     List<TextView> allSensorViews;
     private static float[] allSensorData = new float[10];
     private boolean RUNNING = false, WAS_RUNNING = false;
+    @Inject TensorFlowClassifier classifier;
+    //FIXME: New icon for stairs_down
+    private int[] activityImages = {R.drawable.ic_stairs_down_24dp, R.drawable.ic_run_24dp,
+            R.drawable.ic_seat_24dp, R.drawable.ic_standing_24dp, R.drawable.ic_stairs_up_24dp,
+            R.drawable.ic_walk_24dp};
+
+    private static List<Float> x = new ArrayList<>(), y = new ArrayList<>(), z = new ArrayList<>();
 
     // ------------------------- CONSTRUCTOR -------------------------
 
@@ -83,17 +93,27 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
     // ------------------------- AUXILIARY ---------------------------
 
+    private float[] mergeAndFormatData(){
+        List<Float> data = new ArrayList<>();
+        data.addAll(x);
+        data.addAll(y);
+        data.addAll(z);
+
+        float[] array = new float[data.size()];
+        for (int i = 0; i < data.size(); i++)
+            array[i] = data.get(i) != null ? data.get(i) : Float.NaN;
+        return array;
+    }
+
     // -------------------------- USE CASES --------------------------
 
     private void registerSensorListener(){
-        int frequency = 20 * Constants.MS2US;
-
         for(Sensor sensor : mCriticalSensors) {
             // Check existence, despite the Manifest requirements, a user can side-load the apk
             if(sensor == null)
                 DialogUtils.criticalErrorDialog(this, R.string.sensor_missing, R.string.sensor_missing_description);
             else
-                mSensorManager.registerListener(this, sensor, frequency);
+                mSensorManager.registerListener(this, sensor, Constants.SAMPLING_PERIOD_US);
         }
     }
 
@@ -132,7 +152,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
             registerSensorListener();
             updateSensorValuesUI();
         } else {
-            dra = R.drawable.ic_run_24dp;
+            dra = R.drawable.ic_play_24dp;
             col = R.color.tealDark;
 
             // Stop service
@@ -151,6 +171,28 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         startAndStopFAB.startAnimation(expandAnimation);
     }
 
+    private void predictActivity() {
+        float[] results = classifier.predictProbabilities(mergeAndFormatData());
+
+        // Extract from the results the most probable index
+        int index = 0;
+        float higher = Float.MIN_VALUE;
+        for (int i = 0; i < results.length; i++) {
+            if(results[i] > higher){
+                higher = results[i];
+                index = i;
+            }
+        }
+
+        // Set the activity with a higher probability
+        currentActivity.setImageResource(activityImages[index]);
+
+        // Overlap the samples by the OVERLAPPING_PERCENTAGE set on Constants
+        x = x.subList(Constants.OVERLAP_FROM_INDEX, Constants.SAMPLE_SIZE);
+        y = y.subList(Constants.OVERLAP_FROM_INDEX, Constants.SAMPLE_SIZE);
+        z = z.subList(Constants.OVERLAP_FROM_INDEX, Constants.SAMPLE_SIZE);
+    }
+
     // -------------------------- INTERFACE --------------------------
 
     private final ButterKnife.Action<TextView> UPDATE = new ButterKnife.Action<TextView>() {
@@ -163,7 +205,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        switch (sensorEvent.sensor.getType()){
+        switch (sensorEvent.sensor.getType()) {
             case Sensor.TYPE_PRESSURE:
                 allSensorData[0] = sensorEvent.values[0];
                 allSensorData[1] = sensorEvent.values[1];
@@ -173,11 +215,19 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
                 allSensorData[3] = sensorEvent.values[0];
                 allSensorData[4] = sensorEvent.values[1];
                 allSensorData[5] = sensorEvent.values[2];
+
+                if (x.size() == Constants.SAMPLE_SIZE)
+                    predictActivity();
+
+                x.add(sensorEvent.values[0]);
+                y.add(sensorEvent.values[1]);
+                z.add(sensorEvent.values[2]);
                 break;
             case Sensor.TYPE_GYROSCOPE:
                 allSensorData[6] = sensorEvent.values[0];
                 allSensorData[7] = sensorEvent.values[1];
                 allSensorData[8] = sensorEvent.values[2];
+                break;
             case Sensor.TYPE_MAGNETIC_FIELD:
                 allSensorData[9] = sensorEvent.values[0];
                 break;
