@@ -1,12 +1,8 @@
-package es.us.etsii.sensorflow;
+package es.us.etsii.sensorflow.utils;
 
 import android.content.Context;
-
 import org.tensorflow.contrib.android.TensorFlowInferenceInterface;
-
 import javax.inject.Inject;
-
-import es.us.etsii.sensorflow.utils.Constants;
 
 public class TensorFlowClassifier {
 
@@ -30,8 +26,6 @@ public class TensorFlowClassifier {
         inferenceInterface.feed(INPUT_NODE, data, INPUT_SIZE);
         inferenceInterface.run(OUTPUT_NODES);
         inferenceInterface.fetch(OUTPUT_NODE, result);
-
-        //Downstairs	Jogging	  Sitting	Standing	Upstairs	Walking
         return result;
     }
 }

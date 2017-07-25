@@ -4,6 +4,9 @@ import android.app.Application;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+
+import com.google.firebase.auth.FirebaseAuth;
+
 import javax.inject.Singleton;
 import dagger.Module;
 import dagger.Provides;
@@ -36,5 +39,10 @@ class AppModule {
                 sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
                 sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
         };
+    }
+
+    @Provides
+    FirebaseAuth firebaseAuthProvider(){
+        return FirebaseAuth.getInstance();
     }
 }

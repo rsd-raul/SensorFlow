@@ -9,12 +9,21 @@ buildscript {
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
+
+        // Firebase - Google - https://firebase.google.com/docs/android/setup
+        classpath 'com.google.gms:google-services:3.0.0'
+
+        // DexCount - KeepSafe - https://github.com/KeepSafe/dexcount-gradle-plugin
+        classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.7.3'
     }
 }
 
 allprojects {
     repositories {
         jcenter()
+        maven {
+            url "https://maven.google.com"
+        }
     }
 }
 
