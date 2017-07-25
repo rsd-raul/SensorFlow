@@ -38,7 +38,8 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     // ------------------------- ATTRIBUTES --------------------------
 
     @BindView(R.id.startAndStopFAB) FloatingActionButton startAndStopFAB;
-    @BindView(R.id.iv_current_activity) ImageView currentActivity;
+    @BindView(R.id.iv_current_activity) ImageView currentActivityIV;
+    @BindView(R.id.tv_current_activity) TextView currentActivityTV;
     @Inject SensorManager mSensorManager;
     @Inject Sensor[] mCriticalSensors;
     @BindViews({ R.id.tv_bar_x, R.id.tv_bar_y, R.id.tv_bar_z, R.id.tv_ace_x, R.id.tv_ace_y,
@@ -47,10 +48,6 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     private static float[] allSensorData = new float[10];
     private boolean RUNNING = false, WAS_RUNNING = false;
     @Inject TensorFlowClassifier classifier;
-    //FIXME: New icon for stairs_down
-    private int[] activityImages = {R.drawable.ic_stairs_down_24dp, R.drawable.ic_run_24dp,
-            R.drawable.ic_seat_24dp, R.drawable.ic_standing_24dp, R.drawable.ic_stairs_up_24dp,
-            R.drawable.ic_walk_24dp};
 
     private static List<Float> x = new ArrayList<>(), y = new ArrayList<>(), z = new ArrayList<>();
 
@@ -174,7 +171,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     private void predictActivity() {
         float[] results = classifier.predictProbabilities(mergeAndFormatData());
 
-        // Extract from the results the most probable index
+        // Extract from the results the index of the most probable one
         int index = 0;
         float higher = Float.MIN_VALUE;
         for (int i = 0; i < results.length; i++) {
@@ -185,7 +182,9 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         }
 
         // Set the activity with a higher probability
-        currentActivity.setImageResource(activityImages[index]);
+        currentActivityIV.setImageResource(Constants.ACTIVITY_IMAGES[index]);
+        currentActivityTV.setText(Constants.ACTIVITY_NAMES[index]);
+        currentActivityIV.setContentDescription(currentActivityTV.getText());
 
         // Overlap the samples by the OVERLAPPING_PERCENTAGE set on Constants
         x = x.subList(Constants.OVERLAP_FROM_INDEX, Constants.SAMPLE_SIZE);
