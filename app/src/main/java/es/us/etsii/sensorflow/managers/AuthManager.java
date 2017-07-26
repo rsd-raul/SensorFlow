@@ -10,16 +10,23 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import javax.inject.Inject;
 import es.us.etsii.sensorflow.R;
+import es.us.etsii.sensorflow.domain.User;
+import es.us.etsii.sensorflow.utils.Constants;
 
-public class AuthManager implements OnCompleteListener<AuthResult>, GoogleApiClient.OnConnectionFailedListener{
+public class AuthManager implements OnCompleteListener<AuthResult>,
+                                    GoogleApiClient.OnConnectionFailedListener,
+                                    ResultCallback<Status> {
 
     // --------------------------- VALUES ----------------------------
 
@@ -27,8 +34,10 @@ public class AuthManager implements OnCompleteListener<AuthResult>, GoogleApiCli
 
     // ------------------------- ATTRIBUTES --------------------------
 
+    public static User sUser = null;
     private FirebaseAuth mFirebaseAuth;
     private AppCompatActivity mActivity;
+    private GoogleApiClient mGoogleApiClient;
 
     // ------------------------- CONSTRUCTOR -------------------------
 
@@ -44,13 +53,13 @@ public class AuthManager implements OnCompleteListener<AuthResult>, GoogleApiCli
                 .requestEmail()
                 .build();
 
-        GoogleApiClient mGoogleApiClient = new GoogleApiClient.Builder(activity)
+        mGoogleApiClient = new GoogleApiClient.Builder(activity)
                 .enableAutoManage(activity, this)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
-        activity.startActivityForResult(signInIntent, 31415);
+        activity.startActivityForResult(signInIntent, Constants.GOOGLE_AUTH);
 
         mActivity = activity;
     }
@@ -60,7 +69,7 @@ public class AuthManager implements OnCompleteListener<AuthResult>, GoogleApiCli
     public void handleSignInResult(Intent data){
         GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
         GoogleSignInAccount acct = result.getSignInAccount();
-        
+
         if (result.isSuccess() && acct != null ) {
             AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
             mFirebaseAuth.signInWithCredential(credential).addOnCompleteListener(mActivity, this);
@@ -72,19 +81,40 @@ public class AuthManager implements OnCompleteListener<AuthResult>, GoogleApiCli
         Toast.makeText(mActivity, "PROBLEMS", Toast.LENGTH_SHORT).show();
     }
 
+    public void signOut(){
+        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(this);
+    }
+
     // -------------------------- LISTENER ---------------------------
 
+    /**
+     * Firebase connection completed
+     */
     @Override
     public void onComplete(@NonNull Task<AuthResult> task) {
-        if (task.isSuccessful()) {
-//            FirebaseUser user = mFirebaseAuth.getCurrentUser();
+        FirebaseUser user = mFirebaseAuth.getCurrentUser();
+
+        if (task.isSuccessful() && user != null) {
+            sUser = new User(user.getUid(), user.getDisplayName(), user.getEmail());
+            FirebaseManager.createUser(sUser);
             Toast.makeText(mActivity, "CONNECTED to FIREBASE", Toast.LENGTH_SHORT).show();
         } else
             handleConnectionFail();
     }
 
+    /**
+     * Google Api Client login failure
+     */
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         handleConnectionFail();
+    }
+
+    /**
+     * Google Api Client logout completed
+     */
+    @Override
+    public void onResult(@NonNull Status status) {
+        // TODO offer to delete all the user data? modify interface? do nothing?
     }
 }

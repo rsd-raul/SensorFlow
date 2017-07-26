@@ -27,6 +27,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import es.us.etsii.sensorflow.App;
 import es.us.etsii.sensorflow.R;
+import es.us.etsii.sensorflow.domain.Event;
 import es.us.etsii.sensorflow.managers.AuthManager;
 import es.us.etsii.sensorflow.managers.FirebaseManager;
 import es.us.etsii.sensorflow.utils.TensorFlowClassifier;
@@ -166,9 +167,6 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
             // Start service and UI updater
             registerSensorListener();
             updateSensorValuesUI();
-
-            // FIXME remove hello world
-            FirebaseManager.helloWorld();
 
         } else {
             dra = R.drawable.ic_play_24dp;
