@@ -1,14 +1,18 @@
 package es.us.etsii.sensorflow.views;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.animation.AccelerateInterpolator;
@@ -16,6 +20,8 @@ import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
 import android.widget.ImageView;
 import android.widget.TextView;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.FirebaseApp;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,14 +51,15 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     @BindView(R.id.startAndStopFAB) FloatingActionButton startAndStopFAB;
     @BindView(R.id.iv_current_activity) ImageView currentActivityIV;
     @BindView(R.id.tv_current_activity) TextView currentActivityTV;
-    @BindViews({ R.id.tv_bar_x, R.id.tv_bar_y, R.id.tv_bar_z,
+    @BindViews({R.id.tv_bar_x, R.id.tv_bar_y, R.id.tv_bar_z,
             R.id.tv_ace_x, R.id.tv_ace_y, R.id.tv_ace_z,
             R.id.tv_gyro_x, R.id.tv_gyro_y, R.id.tv_gyro_z,
             R.id.tv_mag_u}) List<TextView> allSensorViews;
     @Inject SensorManager mSensorManager;
     @Inject Sensor[] mCriticalSensors;
     @Inject AuthManager mAuthManager;
-    @Inject TensorFlowClassifier classifier;
+    @Inject TensorFlowClassifier mClassifier;
+    @Inject FusedLocationProviderClient mFusedLocationClient;
     private static float[] sAllSensorData = new float[10];
     private static List<Float> sX = new ArrayList<>(), sY = new ArrayList<>(), sZ = new ArrayList<>();
     private boolean RUNNING = false, WAS_RUNNING = false;
@@ -71,6 +78,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
         // Start up
         ButterKnife.bind(this);
+        // FIXME check for Internet connection first
         FirebaseApp.initializeApp(this);
         mAuthManager.init(this);
     }
@@ -79,7 +87,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
+        // Result from GoogleSignInApi
         if (requestCode == Constants.GOOGLE_AUTH)
             mAuthManager.handleSignInResult(data);
     }
@@ -90,7 +98,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     protected void onResume() {
         super.onResume();
 
-        if(!WAS_RUNNING)
+        if (!WAS_RUNNING)
             return;
 
         // If the service was running, restart it and star the UI updater
@@ -109,7 +117,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
     // ------------------------- AUXILIARY ---------------------------
 
-    private float[] mergeAndFormatData(){
+    private float[] mergeAndFormatData() {
         List<Float> data = new ArrayList<>();
         data.addAll(sX);
         data.addAll(sY);
@@ -123,10 +131,10 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
     // -------------------------- USE CASES --------------------------
 
-    private void registerSensorListener(){
-        for(Sensor sensor : mCriticalSensors) {
+    private void registerSensorListener() {
+        for (Sensor sensor : mCriticalSensors) {
             // Check existence, despite the Manifest requirements, a user can side-load the apk
-            if(sensor == null)
+            if (sensor == null)
                 DialogUtils.criticalErrorDialog(this, R.string.sensor_missing, R.string.sensor_missing_description);
             else
                 mSensorManager.registerListener(this, sensor, Constants.SAMPLING_PERIOD_US);
@@ -141,26 +149,26 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
         // Using a handler to create a recurrent task
         final Handler h = new Handler();
-        h.postDelayed(new Runnable(){
-            public void run(){
+        h.postDelayed(new Runnable() {
+            public void run() {
                 // Apply the same action to all the views
                 ButterKnife.apply(allSensorViews, UPDATE);
 
-                if(RUNNING)
+                if (RUNNING)
                     h.postDelayed(this, Constants.UI_REFRESH_RATE_MS);
             }
         }, Constants.UI_REFRESH_RATE_MS);
     }
 
     @OnClick(R.id.startAndStopFAB)
-    void clickRunAndStop(){
+    void clickRunAndStop() {
         int dra, col;
 
         // Toggle run and stop
         RUNNING = !RUNNING;
 
         // Depending on the action required, stop or start the service (and customize FAB)
-        if(RUNNING) {
+        if (RUNNING) {
             dra = R.drawable.ic_stop_24dp;
             col = R.color.redDark;
 
@@ -189,18 +197,19 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     }
 
     private void predictActivity() {
-        float[] results = classifier.predictProbabilities(mergeAndFormatData());
+        float[] results = mClassifier.predictProbabilities(mergeAndFormatData());
 
         // Extract from the results the index of the most probable one and set the activity
         int index = 0;
         float higher = Float.MIN_VALUE;
         for (int i = 0; i < results.length; i++) {
-            if(results[i] > higher){
+            if (results[i] > higher) {
                 higher = results[i];
                 index = i;
             }
         }
         updateCurrentActivity(index);
+        checkIfDangerousEvent(index);
 
         // Overlap the samples by the OVERLAPPING_PERCENTAGE set on Constants
         sX = sX.subList(Constants.OVERLAP_FROM_INDEX, Constants.SAMPLE_SIZE);
@@ -208,17 +217,43 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         sZ = sZ.subList(Constants.OVERLAP_FROM_INDEX, Constants.SAMPLE_SIZE);
     }
 
+    private void checkIfDangerousEvent(final int eventIndex){
+        // Check if it's the particular Event we want and that we have permissions for location
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED || eventIndex != Constants.ACTIVITY_TO_REPORT)
+            return;
+
+        // Request the location, once obtained, log the event in the DB
+        mFusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        // Got last known location. In some rare situations this can be null.
+                        if (location == null)
+                            return;
+
+                        Event event = new Event();
+                        event.setType(eventIndex);
+                        event.setLatitude(location.getLatitude());
+                        event.setLongitude(location.getLongitude());
+                        event.setAltitude(location.getAltitude());
+                        event.setAccuracy(location.getAccuracy());
+                        FirebaseManager.createEvent(event);
+                    }
+                });
+    }
     // -------------------------- INTERFACE --------------------------
 
     private final ButterKnife.Action<TextView> UPDATE = new ButterKnife.Action<TextView>() {
-        @Override public void apply(@NonNull TextView view, int index) {
+        @Override
+        public void apply(@NonNull TextView view, int index) {
             view.setText(String.valueOf(sAllSensorData[index]));
         }
     };
 
-    private void updateCurrentActivity(int index){
-        currentActivityIV.setImageResource(Constants.ACTIVITY_IMAGES[index]);
-        currentActivityTV.setText(Constants.ACTIVITY_NAMES[index]);
+    private void updateCurrentActivity(final int eventIndex) {
+        currentActivityIV.setImageResource(Constants.ACTIVITY_IMAGES[eventIndex]);
+        currentActivityTV.setText(Constants.ACTIVITY_NAMES[eventIndex]);
         currentActivityIV.setContentDescription(currentActivityTV.getText());
     }
 

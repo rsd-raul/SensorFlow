@@ -5,6 +5,8 @@ import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
 
 import javax.inject.Singleton;
@@ -44,5 +46,11 @@ class AppModule {
     @Provides
     FirebaseAuth firebaseAuthProvider(){
         return FirebaseAuth.getInstance();
+    }
+
+    @Provides
+    FusedLocationProviderClient fusedLocationProviderClientProducer(Context context){
+        // FIXME check for Google Play Services first
+        return LocationServices.getFusedLocationProviderClient(context);
     }
 }

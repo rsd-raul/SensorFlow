@@ -62,9 +62,10 @@ dependencies {
 
     // Firebase - Google - https://firebase.google.com/docs/android/setup
     compile 'com.google.firebase:firebase-database:11.0.2'
-
-    // Firebase & Google Auth
     compile 'com.google.firebase:firebase-auth:11.0.2'
+
+    // Google Play Services - Google - https://developers.google.com/android/guides/setup
+    compile 'com.google.android.gms:play-services-location:11.0.2'
     compile 'com.google.android.gms:play-services-auth:11.0.2'
 
 //    // Firebase UI - Google - https://github.com/firebase/FirebaseUI-Android

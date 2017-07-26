@@ -34,7 +34,7 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
 
     // ------------------------- ATTRIBUTES --------------------------
 
-    public static User sUser = null;
+    static User sUser = null;
     private FirebaseAuth mFirebaseAuth;
     private AppCompatActivity mActivity;
     private GoogleApiClient mGoogleApiClient;

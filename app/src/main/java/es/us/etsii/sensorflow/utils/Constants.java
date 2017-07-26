@@ -9,6 +9,7 @@ public abstract class Constants {
     private static final int FREQUENCY_HZ = 50;
     private static final double SAMPLE_WINDOW_S = 4.0;      // Needs 200 as sample size
     private static final double OVERLAPPING_PERCENTAGE = 50;
+    public static final int ACTIVITY_TO_REPORT = Constants.STANDING_INDEX;
 
     // Constants:
 
@@ -22,6 +23,8 @@ public abstract class Constants {
     public static final int OVERLAP_FROM_INDEX = (int) Math.ceil(SAMPLE_SIZE * (OVERLAPPING_PERCENTAGE/100));
     public static final int SAMPLING_PERIOD_US = Math.round((1000/FREQUENCY_HZ) * Constants.MS2US);
 
+    private static final int STAIRS_DOWN_INDEX = 0, RUNNING_INDEX = 1, SEATED_INDEX = 2,
+            STANDING_INDEX = 3, STAIRS_UP_INDEX = 4, WALKING_INDEX = 5;
     //FIXME: New icon for stairs_down
     public static final int[] ACTIVITY_IMAGES = {R.drawable.ic_stairs_down_24dp, R.drawable.ic_run_24dp,
             R.drawable.ic_seat_24dp, R.drawable.ic_standing_24dp, R.drawable.ic_stairs_up_24dp,
