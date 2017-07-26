@@ -8,16 +8,9 @@ public class Event {
     private double longitude = 0.0;
     private double altitude = 0.0f;
     private float accuracy = 0.0f;
+    private long timestamp = 0L;
 
     public Event() { }
-
-    public Event(int type, double latitude, double longitude, double altitude, float accuracy) {
-        this.type = type;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.altitude = altitude;
-        this.accuracy = accuracy;
-    }
 
     public int getType() {
         return type;
@@ -52,5 +45,13 @@ public class Event {
     }
     public void setAccuracy(float accuracy) {
         this.accuracy = accuracy;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 }

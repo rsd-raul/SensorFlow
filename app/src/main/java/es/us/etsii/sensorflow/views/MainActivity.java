@@ -234,6 +234,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
                         Event event = new Event();
                         event.setType(eventIndex);
+                        event.setTimestamp(System.currentTimeMillis());
                         event.setLatitude(location.getLatitude());
                         event.setLongitude(location.getLongitude());
                         event.setAltitude(location.getAltitude());
