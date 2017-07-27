@@ -15,6 +15,9 @@ buildscript {
 
         // DexCount - KeepSafe - https://github.com/KeepSafe/dexcount-gradle-plugin
         classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.7.3'
+
+        // Realm Java - Realm - https://github.com/realm/realm-java/releases
+        classpath "io.realm:realm-gradle-plugin:3.5.0"
     }
 }
 

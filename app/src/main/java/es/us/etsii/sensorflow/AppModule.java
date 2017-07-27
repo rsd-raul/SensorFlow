@@ -36,10 +36,10 @@ class AppModule {
     @Provides
     Sensor[] criticalSensorsProvider(SensorManager sensorManager){
         return new Sensor[]{
-                sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE),
-                sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+                /*sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE),*/
+                sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)/*,
                 sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
-                sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+                sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)*/
         };
     }
 

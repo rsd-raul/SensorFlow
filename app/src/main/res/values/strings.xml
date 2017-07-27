@@ -2,13 +2,14 @@
     <string name="app_name">Sensor Flow</string>
 
     <string name="sensor_missing">Required Sensor Missing</string>
-    <string name="sensor_missing_description">One of the following sensors is not present:
-        \n\lBarometer\n\lAccelerometer\n\lMagnetometer\n\lGyroscope
-    </string>
+    <string name="sensor_missing_description">"An accelerometer is required to run this app.</string>
+    <!--<string name="sensor_missing_description">One of the following sensors is not present:-->
+        <!--\n\lBarometer\n\lAccelerometer\n\lMagnetometer\n\lGyroscope-->
+    <!--</string>-->
     <string name="y">Y</string>
     <string name="z">Z</string>
     <string name="x">X</string>
-    <string name="u">U</string>
+    <!--<string name="u">U</string>-->
 
     <!--Sensors -->
 
@@ -30,5 +31,10 @@
     <string name="standing">Standing</string>
     <string name="upstairs">Upstairs</string>
     <string name="walking">Walking</string>
+    <string name="hour_unit">H</string>
+    <string name="minute_unit">M</string>
+    <string name="active_total">Active total</string>
+    <string name="active_today">Active today</string>
+    <string name="recognised">Recognised</string>
 
 </resources>

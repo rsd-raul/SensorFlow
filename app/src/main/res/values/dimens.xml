@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="fab_margin">16dp</dimen>
+
+    <dimen name="hour_size">16sp</dimen>
+    <dimen name="minute_size">10sp</dimen>
 </resources>

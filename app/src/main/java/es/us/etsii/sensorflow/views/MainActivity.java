@@ -36,9 +36,11 @@ import es.us.etsii.sensorflow.R;
 import es.us.etsii.sensorflow.domain.Event;
 import es.us.etsii.sensorflow.managers.AuthManager;
 import es.us.etsii.sensorflow.managers.FirebaseManager;
+import es.us.etsii.sensorflow.managers.RealmManager;
 import es.us.etsii.sensorflow.utils.TensorFlowClassifier;
 import es.us.etsii.sensorflow.utils.Constants;
 import es.us.etsii.sensorflow.utils.DialogUtils;
+import io.realm.Realm;
 
 public class MainActivity extends BaseActivity implements SensorEventListener {
 
@@ -51,16 +53,19 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     @BindView(R.id.startAndStopFAB) FloatingActionButton startAndStopFAB;
     @BindView(R.id.iv_current_activity) ImageView currentActivityIV;
     @BindView(R.id.tv_current_activity) TextView currentActivityTV;
-    @BindViews({R.id.tv_bar_x, R.id.tv_bar_y, R.id.tv_bar_z,
-            R.id.tv_ace_x, R.id.tv_ace_y, R.id.tv_ace_z,
+    @BindViews({/*R.id.tv_bar_x, R.id.tv_bar_y, R.id.tv_bar_z,*/
+            R.id.tv_ace_x, R.id.tv_ace_y, R.id.tv_ace_z /*,
             R.id.tv_gyro_x, R.id.tv_gyro_y, R.id.tv_gyro_z,
-            R.id.tv_mag_u}) List<TextView> allSensorViews;
+            R.id.tv_mag_u*/}) List<TextView> mSensorsInfoTVs;
+    @BindView(R.id.tv_today_time) TextView mTodayTimeTV;
+    @BindView(R.id.tv_total_time) TextView mTotalTimeTV;
     @Inject SensorManager mSensorManager;
-    @Inject Sensor[] mCriticalSensors;
     @Inject AuthManager mAuthManager;
+    @Inject RealmManager mRealmManager;
+    @Inject Sensor[] mCriticalSensors;
     @Inject TensorFlowClassifier mClassifier;
     @Inject FusedLocationProviderClient mFusedLocationClient;
-    private static float[] sAllSensorData = new float[10];
+    private static float[] sAllSensorData = new float[3];
     private static List<Float> sX = new ArrayList<>(), sY = new ArrayList<>(), sZ = new ArrayList<>();
     private boolean RUNNING = false, WAS_RUNNING = false;
 
@@ -80,6 +85,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         ButterKnife.bind(this);
         // FIXME check for Internet connection first
         FirebaseApp.initializeApp(this);
+        Realm.init(this);
         mAuthManager.init(this);
     }
 
@@ -98,21 +104,17 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     protected void onResume() {
         super.onResume();
 
-        if (!WAS_RUNNING)
-            return;
-
         // If the service was running, restart it and star the UI updater
-        registerSensorListener();
-        updateSensorValuesUI();
+//        registerSensorListener();
+//        updateSensorValuesUI();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        mSensorManager.unregisterListener(this);
+//        mSensorManager.unregisterListener(this);
 
-        WAS_RUNNING = RUNNING;
-        RUNNING = false;
+//        RUNNING = false;
     }
 
     // ------------------------- AUXILIARY ---------------------------
@@ -152,7 +154,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         h.postDelayed(new Runnable() {
             public void run() {
                 // Apply the same action to all the views
-                ButterKnife.apply(allSensorViews, UPDATE);
+                ButterKnife.apply(mSensorsInfoTVs, UPDATE);
 
                 if (RUNNING)
                     h.postDelayed(this, Constants.UI_REFRESH_RATE_MS);
@@ -256,6 +258,9 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         currentActivityIV.setImageResource(Constants.ACTIVITY_IMAGES[eventIndex]);
         currentActivityTV.setText(Constants.ACTIVITY_NAMES[eventIndex]);
         currentActivityIV.setContentDescription(currentActivityTV.getText());
+
+        mTodayTimeTV.setText("12h");
+        mTotalTimeTV.setText("123h");
     }
 
     // -------------------------- LISTENER ---------------------------
@@ -263,15 +268,15 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         switch (sensorEvent.sensor.getType()) {
-            case Sensor.TYPE_PRESSURE:
+//            case Sensor.TYPE_PRESSURE:
+//                sAllSensorData[0] = sensorEvent.values[0];
+//                sAllSensorData[1] = sensorEvent.values[1];
+//                sAllSensorData[2] = sensorEvent.values[2];
+//                break;
+            case Sensor.TYPE_ACCELEROMETER:
                 sAllSensorData[0] = sensorEvent.values[0];
                 sAllSensorData[1] = sensorEvent.values[1];
                 sAllSensorData[2] = sensorEvent.values[2];
-                break;
-            case Sensor.TYPE_ACCELEROMETER:
-                sAllSensorData[3] = sensorEvent.values[0];
-                sAllSensorData[4] = sensorEvent.values[1];
-                sAllSensorData[5] = sensorEvent.values[2];
 
                 if (sX.size() == Constants.SAMPLE_SIZE)
                     predictActivity();
@@ -280,14 +285,14 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
                 sY.add(sensorEvent.values[1]);
                 sZ.add(sensorEvent.values[2]);
                 break;
-            case Sensor.TYPE_GYROSCOPE:
-                sAllSensorData[6] = sensorEvent.values[0];
-                sAllSensorData[7] = sensorEvent.values[1];
-                sAllSensorData[8] = sensorEvent.values[2];
-                break;
-            case Sensor.TYPE_MAGNETIC_FIELD:
-                sAllSensorData[9] = sensorEvent.values[0];
-                break;
+//            case Sensor.TYPE_GYROSCOPE:
+//                sAllSensorData[6] = sensorEvent.values[0];
+//                sAllSensorData[7] = sensorEvent.values[1];
+//                sAllSensorData[8] = sensorEvent.values[2];
+//                break;
+//            case Sensor.TYPE_MAGNETIC_FIELD:
+//                sAllSensorData[9] = sensorEvent.values[0];
+//                break;
             default:
                 Log.e(TAG, "Unsupervised sensor change");
         }

@@ -4,7 +4,10 @@ package es.us.etsii.sensorflow;
 import android.app.Application;
 import javax.inject.Singleton;
 import dagger.Component;
+import es.us.etsii.sensorflow.utils.PrimaryKeyFactory;
 import es.us.etsii.sensorflow.views.MainActivity;
+import io.realm.Realm;
+import io.realm.RealmConfiguration;
 
 public class App extends Application {
 
@@ -32,6 +35,14 @@ public class App extends Application {
                         new AppModule(this))
                 .build();
         appComponent.inject(this);
+
+        // Set the RealmConfiguration and PrimaryKeyFactory for Realm usage
+        RealmConfiguration realmConfiguration = new RealmConfiguration.Builder()
+                .schemaVersion(0)
+//                .migration(new MigrationHelper())
+                .build();
+        Realm.setDefaultConfiguration(realmConfiguration);
+        PrimaryKeyFactory.initialize(Realm.getDefaultInstance());
     }
 
     public AppComponent getComponent() {

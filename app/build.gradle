@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'realm-android'                   // Required by Realm
 
 android {
     compileSdkVersion 25
@@ -21,6 +22,10 @@ android {
 
     buildTypes {
         release {
+            // Strip out unused resources, including those from support libraries
+//            minifyEnabled true
+//            shrinkResources true
+
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
@@ -41,21 +46,15 @@ dependencies {
     })
     testCompile 'junit:junit:4.12'
 
-    // Support - Google
+    // Support - Google - https://developer.android.com/topic/libraries/support-library/revisions.html
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    compile 'com.android.support:recyclerview-v7:25.3.1'
 
     // Dagger 2 - Google - https://github.com/google/dagger/releases
     compile 'com.google.dagger:dagger:2.10-rc2'
     annotationProcessor 'com.google.dagger:dagger-compiler:2.11'
-
-    // ButterKnife - Jake Wharton - https://github.com/JakeWharton/butterknife
-    compile 'com.jakewharton:butterknife:8.7.0'
-    annotationProcessor 'com.jakewharton:butterknife-compiler:8.7.0'
-
-    // MaterialDialogs - Aidan Follestad - https://github.com/afollestad/material-dialogs
-    compile 'com.afollestad.material-dialogs:commons:0.9.4.5'
 
     // Tensorflow - Google - https://www.tensorflow.org/
     compile 'org.tensorflow:tensorflow-android:1.2.0'
@@ -68,11 +67,17 @@ dependencies {
     compile 'com.google.android.gms:play-services-location:11.0.2'
     compile 'com.google.android.gms:play-services-auth:11.0.2'
 
-//    // Firebase UI - Google - https://github.com/firebase/FirebaseUI-Android
-//    compile 'com.firebaseui:firebase-ui-database:2.0.1'     // Database only
-//    compile 'com.firebaseui:firebase-ui-auth:2.0.1'         // Auth only
-        // Downgraded from v2.1.0 due to compatibility issues
-        // Deprecated due to Dex errors -> Firebase & Google Auth
+    // ButterKnife - Jake Wharton - https://github.com/JakeWharton/butterknife
+    compile 'com.jakewharton:butterknife:8.7.0'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.7.0'
+
+    // MaterialDialogs - Aidan Follestad - https://github.com/afollestad/material-dialogs
+    compile 'com.afollestad.material-dialogs:commons:0.9.4.5'
+
+    // FastAdapter - Mike Penz - https://github.com/mikepenz/FastAdapter
+    compile('com.mikepenz:fastadapter:2.6.0@aar') { transitive = true }
+
+
 }
 
 apply plugin: 'com.google.gms.google-services'  // Firebase
