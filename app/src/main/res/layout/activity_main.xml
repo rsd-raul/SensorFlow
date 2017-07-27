@@ -8,6 +8,7 @@
     tools:context=".views.MainActivity"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+<!--TODO Remove placeholders-->
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/startAndStopFAB"

@@ -175,6 +175,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
             col = R.color.redDark;
 
             // Start service and UI updater
+            mRealmManager.openRealm();
             registerSensorListener();
             updateSensorValuesUI();
 
@@ -184,6 +185,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
             // Stop service
             mSensorManager.unregisterListener(this);
+            mRealmManager.closeRealm();
         }
 
         // Change colors and function
