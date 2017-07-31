@@ -31,6 +31,7 @@ import butterknife.BindView;
 import butterknife.BindViews;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import dagger.Lazy;
 import es.us.etsii.sensorflow.App;
 import es.us.etsii.sensorflow.R;
 import es.us.etsii.sensorflow.domain.Event;
@@ -40,7 +41,7 @@ import es.us.etsii.sensorflow.managers.RealmManager;
 import es.us.etsii.sensorflow.utils.TensorFlowClassifier;
 import es.us.etsii.sensorflow.utils.Constants;
 import es.us.etsii.sensorflow.utils.DialogUtils;
-import io.realm.Realm;
+import es.us.etsii.sensorflow.utils.Utils;
 
 public class MainActivity extends BaseActivity implements SensorEventListener {
 
@@ -59,15 +60,16 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
             R.id.tv_mag_u*/}) List<TextView> mSensorsInfoTVs;
     @BindView(R.id.tv_today_time) TextView mTodayTimeTV;
     @BindView(R.id.tv_total_time) TextView mTotalTimeTV;
-    @Inject SensorManager mSensorManager;
     @Inject AuthManager mAuthManager;
-    @Inject RealmManager mRealmManager;
-    @Inject Sensor[] mCriticalSensors;
-    @Inject TensorFlowClassifier mClassifier;
-    @Inject FusedLocationProviderClient mFusedLocationClient;
+    @Inject Lazy<SensorManager> mSensorManager;
+    @Inject Lazy<RealmManager> mRealmManager;
+    @Inject Lazy<Sensor[]> mCriticalSensors;
+    @Inject Lazy<TensorFlowClassifier> mClassifier;
+    @Inject Lazy<FusedLocationProviderClient> mFusedLocationClient;
     private static float[] sAllSensorData = new float[3];
     private static List<Float> sX = new ArrayList<>(), sY = new ArrayList<>(), sZ = new ArrayList<>();
-    private boolean RUNNING = false, WAS_RUNNING = false;
+    private boolean RUNNING = false;
+    private double mTodayExercise = -1, mTotalExercise = -1;
 
     // ------------------------- CONSTRUCTOR -------------------------
 
@@ -85,8 +87,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         ButterKnife.bind(this);
         // FIXME check for Internet connection first
         FirebaseApp.initializeApp(this);
-        Realm.init(this);
-        mAuthManager.init(this);
+        mAuthManager.init(this);  // TODO Run in background? Skipping frames...
     }
 
     @Override
@@ -114,7 +115,9 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         super.onPause();
 //        mSensorManager.unregisterListener(this);
 
-//        RUNNING = false;
+        // When left in background, recalculate today/total exercise
+        mTodayExercise = -1;
+        mTotalExercise = -1;
     }
 
     // ------------------------- AUXILIARY ---------------------------
@@ -131,15 +134,20 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         return array;
     }
 
+    public boolean isUserActive(int eventIndex) {
+        return eventIndex == Constants.RUNNING_INDEX || eventIndex == Constants.WALKING_INDEX ||
+                eventIndex == Constants.STAIRS_UP_INDEX || eventIndex == Constants.STAIRS_DOWN_INDEX;
+    }
+
     // -------------------------- USE CASES --------------------------
 
     private void registerSensorListener() {
-        for (Sensor sensor : mCriticalSensors) {
+        for (Sensor sensor : mCriticalSensors.get()) {
             // Check existence, despite the Manifest requirements, a user can side-load the apk
             if (sensor == null)
                 DialogUtils.criticalErrorDialog(this, R.string.sensor_missing, R.string.sensor_missing_description);
             else
-                mSensorManager.registerListener(this, sensor, Constants.SAMPLING_PERIOD_US);
+                mSensorManager.get().registerListener(this, sensor, Constants.SAMPLING_PERIOD_US);
         }
     }
 
@@ -175,7 +183,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
             col = R.color.redDark;
 
             // Start service and UI updater
-            mRealmManager.openRealm();
+            mRealmManager.get().openRealm();
             registerSensorListener();
             updateSensorValuesUI();
 
@@ -184,8 +192,8 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
             col = R.color.tealDark;
 
             // Stop service
-            mSensorManager.unregisterListener(this);
-            mRealmManager.closeRealm();
+            mSensorManager.get().unregisterListener(this);
+            mRealmManager.get().closeRealm();
         }
 
         // Change colors and function
@@ -201,7 +209,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     }
 
     private void predictActivity() {
-        float[] results = mClassifier.predictProbabilities(mergeAndFormatData());
+        float[] results = mClassifier.get().predictProbabilities(mergeAndFormatData());
 
         // Extract from the results the index of the most probable one and set the activity
         int index = 0;
@@ -228,7 +236,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
             return;
 
         // Request the location, once obtained, log the event in the DB
-        mFusedLocationClient.getLastLocation()
+        mFusedLocationClient.get().getLastLocation()
                 .addOnSuccessListener(this, new OnSuccessListener<Location>() {
                     @Override
                     public void onSuccess(Location location) {
@@ -261,8 +269,17 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         currentActivityTV.setText(Constants.ACTIVITY_NAMES[eventIndex]);
         currentActivityIV.setContentDescription(currentActivityTV.getText());
 
-        mTodayTimeTV.setText("12h");
-        mTotalTimeTV.setText("123h");
+        // Recalculate the exercises done today in case of activity
+        if(mTodayExercise == -1 && mTotalExercise == -1){
+//            calculateTodayAndTotal();
+            mTodayExercise = 0; mTotalExercise = 0;   // FIXME use the DB to calculate
+        }else if(isUserActive(eventIndex)) {
+            mTodayExercise += Constants.M_ELAPSED_PER_SAMPLE;
+            mTotalExercise += Constants.M_ELAPSED_PER_SAMPLE;
+        }
+
+        mTodayTimeTV.setText(Utils.getCustomDurationString(this, (int) Math.floor(mTodayExercise)));
+        mTotalTimeTV.setText(Utils.getCustomDurationString(this, (int) Math.floor(mTotalExercise)));
     }
 
     // -------------------------- LISTENER ---------------------------
@@ -302,5 +319,4 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) { /* Do nothing */ }
-
 }

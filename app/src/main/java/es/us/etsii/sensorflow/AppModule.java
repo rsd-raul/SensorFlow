@@ -12,6 +12,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import javax.inject.Singleton;
 import dagger.Module;
 import dagger.Provides;
+import io.realm.Realm;
 
 @Module
 class AppModule {
@@ -52,5 +53,10 @@ class AppModule {
     FusedLocationProviderClient fusedLocationProviderClientProducer(Context context){
         // FIXME check for Google Play Services first
         return LocationServices.getFusedLocationProviderClient(context);
+    }
+
+    @Provides
+    Realm realmProvider(){
+        return Realm.getDefaultInstance();
     }
 }

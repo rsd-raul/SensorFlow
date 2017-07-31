@@ -8,18 +8,6 @@
     tools:context=".views.MainActivity"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-<!--TODO Remove placeholders-->
-
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/startAndStopFAB"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/fab_margin"
-        app:backgroundTint="@color/tealDark"
-        app:layout_anchor="@id/sv_main"
-        app:layout_anchorGravity="bottom|end|right"
-        app:srcCompat="@drawable/ic_play_24dp" />
-
     <ScrollView
         android:id="@+id/sv_main"
         android:layout_width="match_parent"
@@ -207,5 +195,17 @@
 
         </android.support.constraint.ConstraintLayout>
     </ScrollView>
+
+    <!--TODO Remove placeholders-->
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/startAndStopFAB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/fab_margin"
+        app:backgroundTint="@color/tealDark"
+        app:layout_anchor="@id/sv_main"
+        app:layout_anchorGravity="bottom|end|right"
+        app:srcCompat="@drawable/ic_play_24dp" />
 
 </android.support.design.widget.CoordinatorLayout>

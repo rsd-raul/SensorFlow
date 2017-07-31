@@ -20,10 +20,13 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import es.us.etsii.sensorflow.R;
 import es.us.etsii.sensorflow.domain.User;
 import es.us.etsii.sensorflow.utils.Constants;
 
+@Singleton
 public class AuthManager implements OnCompleteListener<AuthResult>,
                                     GoogleApiClient.OnConnectionFailedListener,
                                     ResultCallback<Status> {
@@ -42,7 +45,7 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
     // ------------------------- CONSTRUCTOR -------------------------
 
     @Inject
-    public AuthManager(FirebaseAuth firebaseAuth) {
+    AuthManager(FirebaseAuth firebaseAuth) {
         // Configure Google Sign In
         mFirebaseAuth = firebaseAuth;
     }

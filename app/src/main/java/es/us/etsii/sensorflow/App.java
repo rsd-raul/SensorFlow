@@ -1,6 +1,5 @@
 package es.us.etsii.sensorflow;
 
-
 import android.app.Application;
 import javax.inject.Singleton;
 import dagger.Component;
@@ -36,7 +35,8 @@ public class App extends Application {
                 .build();
         appComponent.inject(this);
 
-        // Set the RealmConfiguration and PrimaryKeyFactory for Realm usage
+//         Set the RealmConfiguration and PrimaryKeyFactory for Realm usage
+        Realm.init(this);
         RealmConfiguration realmConfiguration = new RealmConfiguration.Builder()
                 .schemaVersion(0)
 //                .migration(new MigrationHelper())

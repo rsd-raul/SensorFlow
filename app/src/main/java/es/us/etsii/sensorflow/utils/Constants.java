@@ -15,15 +15,20 @@ public abstract class Constants {
 
     public static final int GOOGLE_AUTH = 1;
     private static final int MS2US = 1000;
+    private static final double MS2S = 0.001;
+    private static final double S2M = 0.0166666667;
     public static final int UI_REFRESH_RATE_MS = 1000;
 
     // TensorFlow Model:
 
     public static final int SAMPLE_SIZE = (int) Math.floor(FREQUENCY_HZ * SAMPLE_WINDOW_S);
     public static final int OVERLAP_FROM_INDEX = (int) Math.ceil(SAMPLE_SIZE * (OVERLAPPING_PERCENTAGE/100));
-    public static final int SAMPLING_PERIOD_US = Math.round((1000/FREQUENCY_HZ) * Constants.MS2US);
+    public static final int SAMPLING_PERIOD_US = Math.round((1000/FREQUENCY_HZ) * MS2US);
 
-    private static final int STAIRS_DOWN_INDEX = 0, RUNNING_INDEX = 1, SEATED_INDEX = 2,
+    private static final double SAMPLING_PERIOD_M = (1000/FREQUENCY_HZ) * MS2S * S2M;
+    public static final double M_ELAPSED_PER_SAMPLE = (SAMPLE_SIZE / (100/OVERLAPPING_PERCENTAGE)) * SAMPLING_PERIOD_M;
+
+    public static final int STAIRS_DOWN_INDEX = 0, RUNNING_INDEX = 1, SEATED_INDEX = 2,
             STANDING_INDEX = 3, STAIRS_UP_INDEX = 4, WALKING_INDEX = 5;
     //FIXME: New icon for stairs_down
     public static final int[] ACTIVITY_IMAGES = {R.drawable.ic_stairs_down_24dp, R.drawable.ic_run_24dp,

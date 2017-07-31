@@ -11,6 +11,8 @@ public class SensorData extends RealmObject {
     private float accelerometerY;
     private float accelerometerZ;
 
+    public SensorData() { }
+
     public SensorData(float accelerometerX, float accelerometerY, float accelerometerZ) {
         this.accelerometerX = accelerometerX;
         this.accelerometerY = accelerometerY;

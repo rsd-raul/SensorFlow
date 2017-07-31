@@ -1,18 +1,20 @@
 package es.us.etsii.sensorflow.managers;
 
-import android.content.Context;
 import java.util.List;
 import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import es.us.etsii.sensorflow.domain.SensorData;
 import io.realm.Realm;
 
+@Singleton
 public class RealmManager {
 
     private Realm mRealm;
 
     @Inject
-    public RealmManager(Context context) {
-        Realm.init(context);
+    RealmManager(Realm mRealm) {
+        this.mRealm = mRealm;
     }
 
     public void storeSensorDataBatch(final List<SensorData> sensorDataBatch){
