@@ -25,7 +25,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.FirebaseApp;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.inject.Inject;
 import butterknife.BindView;
 import butterknife.BindViews;
@@ -35,6 +34,7 @@ import dagger.Lazy;
 import es.us.etsii.sensorflow.App;
 import es.us.etsii.sensorflow.R;
 import es.us.etsii.sensorflow.domain.Event;
+import es.us.etsii.sensorflow.domain.SensorData;
 import es.us.etsii.sensorflow.managers.AuthManager;
 import es.us.etsii.sensorflow.managers.FirebaseManager;
 import es.us.etsii.sensorflow.managers.RealmManager;
@@ -54,10 +54,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     @BindView(R.id.startAndStopFAB) FloatingActionButton startAndStopFAB;
     @BindView(R.id.iv_current_activity) ImageView currentActivityIV;
     @BindView(R.id.tv_current_activity) TextView currentActivityTV;
-    @BindViews({/*R.id.tv_bar_x, R.id.tv_bar_y, R.id.tv_bar_z,*/
-            R.id.tv_ace_x, R.id.tv_ace_y, R.id.tv_ace_z /*,
-            R.id.tv_gyro_x, R.id.tv_gyro_y, R.id.tv_gyro_z,
-            R.id.tv_mag_u*/}) List<TextView> mSensorsInfoTVs;
+    @BindViews({R.id.tv_ace_x, R.id.tv_ace_y, R.id.tv_ace_z}) List<TextView> mSensorsInfoTVs;
     @BindView(R.id.tv_today_time) TextView mTodayTimeTV;
     @BindView(R.id.tv_total_time) TextView mTotalTimeTV;
     @Inject AuthManager mAuthManager;
@@ -70,6 +67,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     private static List<Float> sX = new ArrayList<>(), sY = new ArrayList<>(), sZ = new ArrayList<>();
     private boolean RUNNING = false;
     private double mTodayExercise = -1, mTotalExercise = -1;
+    private List<SensorData> sensorDataBatch = new ArrayList<>();
 
     // ------------------------- CONSTRUCTOR -------------------------
 
@@ -136,7 +134,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
     public boolean isUserActive(int eventIndex) {
         return eventIndex == Constants.RUNNING_INDEX || eventIndex == Constants.WALKING_INDEX ||
-                eventIndex == Constants.STAIRS_UP_INDEX || eventIndex == Constants.STAIRS_DOWN_INDEX;
+               eventIndex == Constants.STAIRS_UP_INDEX || eventIndex == Constants.STAIRS_DOWN_INDEX;
     }
 
     // -------------------------- USE CASES --------------------------
@@ -145,14 +143,15 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         for (Sensor sensor : mCriticalSensors.get()) {
             // Check existence, despite the Manifest requirements, a user can side-load the apk
             if (sensor == null)
-                DialogUtils.criticalErrorDialog(this, R.string.sensor_missing, R.string.sensor_missing_description);
+                DialogUtils.criticalErrorDialog(this, R.string.sensor_missing,
+                        R.string.sensor_missing_description);
             else
                 mSensorManager.get().registerListener(this, sensor, Constants.SAMPLING_PERIOD_US);
         }
     }
 
     /**
-     * Once every UI_REFRESH_RATE_MS update all sensor values with the data stored in sAllSensorData.
+     * Once every UI_REFRESH_RATE_MS update sensor values with the data stored in sAllSensorData.
      */
     private void updateSensorValuesUI() {
         RUNNING = true;
@@ -198,7 +197,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
         // Change colors and function
         startAndStopFAB.setImageResource(dra);
-        startAndStopFAB.setBackgroundTintList(ContextCompat.getColorStateList(MainActivity.this, col));
+        startAndStopFAB.setBackgroundTintList(ContextCompat.getColorStateList(this, col));
 
         // Animate changes
         ScaleAnimation expandAnimation = new ScaleAnimation(0f, 1f, 0f, 1f,
@@ -286,35 +285,25 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        switch (sensorEvent.sensor.getType()) {
-//            case Sensor.TYPE_PRESSURE:
-//                sAllSensorData[0] = sensorEvent.values[0];
-//                sAllSensorData[1] = sensorEvent.values[1];
-//                sAllSensorData[2] = sensorEvent.values[2];
-//                break;
-            case Sensor.TYPE_ACCELEROMETER:
-                sAllSensorData[0] = sensorEvent.values[0];
-                sAllSensorData[1] = sensorEvent.values[1];
-                sAllSensorData[2] = sensorEvent.values[2];
+        if(sensorEvent.sensor.getType() != Sensor.TYPE_ACCELEROMETER)
+            return;
 
-                if (sX.size() == Constants.SAMPLE_SIZE)
-                    predictActivity();
+        sAllSensorData[0] = sensorEvent.values[0];
+        sAllSensorData[1] = sensorEvent.values[1];
+        sAllSensorData[2] = sensorEvent.values[2];
 
-                sX.add(sensorEvent.values[0]);
-                sY.add(sensorEvent.values[1]);
-                sZ.add(sensorEvent.values[2]);
-                break;
-//            case Sensor.TYPE_GYROSCOPE:
-//                sAllSensorData[6] = sensorEvent.values[0];
-//                sAllSensorData[7] = sensorEvent.values[1];
-//                sAllSensorData[8] = sensorEvent.values[2];
-//                break;
-//            case Sensor.TYPE_MAGNETIC_FIELD:
-//                sAllSensorData[9] = sensorEvent.values[0];
-//                break;
-            default:
-                Log.e(TAG, "Unsupervised sensor change");
+        sensorDataBatch.add(new SensorData(sAllSensorData[0], sAllSensorData[1], sAllSensorData[2]));
+        if(sensorDataBatch.size() == Constants.REALM_BATCH_SIZE) {
+            mRealmManager.get().storeSensorDataBatch(sensorDataBatch);
+            sensorDataBatch.clear();
         }
+
+        if (sX.size() == Constants.SAMPLE_SIZE)
+            predictActivity();
+
+        sX.add(sensorEvent.values[0]);
+        sY.add(sensorEvent.values[1]);
+        sZ.add(sensorEvent.values[2]);
     }
 
     @Override

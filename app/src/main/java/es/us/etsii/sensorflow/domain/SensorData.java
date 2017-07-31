@@ -1,5 +1,6 @@
 package es.us.etsii.sensorflow.domain;
 
+import es.us.etsii.sensorflow.utils.PrimaryKeyFactory;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
@@ -7,6 +8,7 @@ public class SensorData extends RealmObject {
 
     @PrimaryKey
     private long id = -1;
+    private long timestamp;
     private float accelerometerX;
     private float accelerometerY;
     private float accelerometerZ;
@@ -14,6 +16,8 @@ public class SensorData extends RealmObject {
     public SensorData() { }
 
     public SensorData(float accelerometerX, float accelerometerY, float accelerometerZ) {
+        this.id = PrimaryKeyFactory.nextKey();
+        this.timestamp = System.currentTimeMillis();
         this.accelerometerX = accelerometerX;
         this.accelerometerY = accelerometerY;
         this.accelerometerZ = accelerometerZ;
@@ -24,6 +28,13 @@ public class SensorData extends RealmObject {
     }
     public void setId(long id) {
         this.id = id;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 
     public float getAccelerometerX() {

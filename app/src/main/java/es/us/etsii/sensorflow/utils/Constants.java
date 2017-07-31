@@ -10,6 +10,7 @@ public abstract class Constants {
     private static final double SAMPLE_WINDOW_S = 4.0;      // Needs 200 as sample size
     private static final double OVERLAPPING_PERCENTAGE = 50;
     public static final int ACTIVITY_TO_REPORT = Constants.STANDING_INDEX;
+    public static final int REALM_BATCH_SIZE = 100;
 
     // Constants:
 

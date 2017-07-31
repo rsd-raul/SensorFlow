@@ -6,6 +6,7 @@ import javax.inject.Singleton;
 
 import es.us.etsii.sensorflow.domain.SensorData;
 import io.realm.Realm;
+import io.realm.RealmResults;
 
 @Singleton
 public class RealmManager {
@@ -17,13 +18,18 @@ public class RealmManager {
         this.mRealm = mRealm;
     }
 
+    // FIXME Needs to be async
     public void storeSensorDataBatch(final List<SensorData> sensorDataBatch){
-        mRealm.executeTransactionAsync(new Realm.Transaction() {
+        mRealm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 mRealm.copyToRealm(sensorDataBatch);
             }
         });
+    }
+
+    public RealmResults<SensorData> findAllSensorData(){
+        return mRealm.where(SensorData.class).findAll();
     }
 
     public void openRealm(){
