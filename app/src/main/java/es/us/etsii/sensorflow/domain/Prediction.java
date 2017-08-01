@@ -19,12 +19,7 @@ public class Prediction extends RealmObject {
 
     public Prediction() {
         this.id = PrimaryKeyFactory.nextKey();
-        samples = new RealmList<>();
-    }
-
-    public void complete(int type, long timestamp) {
-        this.type = type;
-        this.timestamp = timestamp;
+        this.samples = new RealmList<>();
     }
 
     // ---------------------- GETTERS & SETTERS ----------------------
@@ -37,13 +32,43 @@ public class Prediction extends RealmObject {
         return timestamp;
     }
 
-    public Prediction reset(int overlapIndex) {
-        this.id = PrimaryKeyFactory.nextKey();
+    public RealmList<Sample> getSamples() {
+        return samples;
+    }
 
-        return this;
+    public void addSample(Sample sample){
+        samples.add(sample);
     }
 
     // -------------------------- USE CASES --------------------------
+
+    public void complete(int type, long timestamp) {
+        this.type = type;
+        this.timestamp = timestamp;
+    }
+
+    public Prediction reset(int overlapIndex) {
+        this.id = PrimaryKeyFactory.nextKey();
+
+        // Cast to list
+//        this.samples = this.samples.subList(overlapIndex, samples.size());
+
+        //TODO - OPTION A - Should work, bad on cpu
+//        int times = samples.size() - overlapIndex;
+//        while (times-- != 0)
+//            samples.remove(times);
+
+        //TODO - OPTION B - Should be efficient, if it works
+        samples.removeAll(samples.subList(0, overlapIndex));
+
+        //TODO - OPTION C - Should work, bad on memory
+//        RealmList<Sample> temp = new RealmList<>();
+//        for (int i = overlapIndex; i < samples.size(); i++)
+//            temp.add(samples.get(i));
+//        samples = temp;
+
+        return this;
+    }
 
     // -------------------------- AUXILIARY --------------------------
 }

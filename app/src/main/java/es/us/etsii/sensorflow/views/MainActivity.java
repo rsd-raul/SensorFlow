@@ -16,20 +16,15 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.View;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.FirebaseApp;
-import com.mikepenz.fastadapter.FastAdapter;
-import com.mikepenz.fastadapter.IAdapter;
 import com.mikepenz.fastadapter.commons.adapters.FastItemAdapter;
-import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -76,10 +71,8 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     @Inject Provider<PredictionItem> mActivityItemProvider;
     private static Prediction mPrediction;
     private static float[] sAllSensorData = new float[3];
-    private static List<Float> sX = new ArrayList<>(), sY = new ArrayList<>(), sZ = new ArrayList<>();
     private boolean RUNNING = false;
     private double mTodayExercise = -1, mTotalExercise = -1;
-    private List<Sample> sensorDataBatch = new ArrayList<>();
 
     // ------------------------- CONSTRUCTOR -------------------------
 
@@ -98,6 +91,10 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         // FIXME check for Internet connection first
         FirebaseApp.initializeApp(this);
         mAuthManager.init(this);  // TODO Run in background? Skipping frames...
+
+        // Setup Today's recycler view
+        todaysActivitiesRV.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        todaysActivitiesRV.setAdapter(mFastAdapter);
     }
 
     @Override
@@ -133,15 +130,19 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     // ------------------------- AUXILIARY ---------------------------
 
     private float[] mergeAndFormatData() {
-        List<Float> data = new ArrayList<>();
-        data.addAll(sX);
-        data.addAll(sY);
-        data.addAll(sZ);
+        // The array Sum will be the aggregation of all the accelerometer's data
+        float[] arraySum = new float[mPrediction.getSamples().size() * 3];
+        int samplesSize = mPrediction.getSamples().size();
 
-        float[] array = new float[data.size()];
-        for (int i = 0; i < data.size(); i++)
-            array[i] = data.get(i) != null ? data.get(i) : Float.NaN;
-        return array;
+        // Iterate over the samples and introduce the data on the correct position
+        for (int i = 0; i < samplesSize; i++) {
+            Sample sample = mPrediction.getSamples().get(i);
+
+            arraySum[i] = sample.getAccelerometerX();
+            arraySum[i + samplesSize] = sample.getAccelerometerY();
+            arraySum[i + samplesSize * 2] = sample.getAccelerometerZ();
+        }
+        return arraySum;
     }
 
     public boolean isUserActive(int eventIndex) {
@@ -185,6 +186,9 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     void clickRunAndStop() {
         int dra, col;
 
+        if(mPrediction == null)
+            mPrediction = new Prediction();
+
         // Toggle run and stop
         RUNNING = !RUNNING;
 
@@ -219,7 +223,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         startAndStopFAB.startAnimation(expandAnimation);
     }
 
-    private void predictActivity() {
+    private void predictAndStoreActivity() {
         float[] results = mClassifier.get().predictProbabilities(mergeAndFormatData());
 
         // Extract from the results the index of the most probable one and set the activity
@@ -235,18 +239,8 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         mPrediction.complete(index, System.currentTimeMillis());
         mRealmManager.get().storePrediction(mPrediction);
 
-
-
         updateCurrentActivity(index);
         checkIfDangerousEvent(index);
-
-
-        // TODO REMOVE
-        // Overlap the samples by the OVERLAPPING_PERCENTAGE set on Constants
-        sX = sX.subList(Constants.OVERLAP_FROM_INDEX, Constants.SAMPLE_SIZE);
-        sY = sY.subList(Constants.OVERLAP_FROM_INDEX, Constants.SAMPLE_SIZE);
-        sZ = sZ.subList(Constants.OVERLAP_FROM_INDEX, Constants.SAMPLE_SIZE);
-
 
         // Reset the prediction once stored and UI updated
         mPrediction.reset(Constants.OVERLAP_FROM_INDEX);
@@ -334,44 +328,27 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         mTotalExercise = 0;
     }
 
-    private void setupTodaysActivities(){
-        todaysActivitiesRV.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        todaysActivitiesRV.setAdapter(mFastAdapter);
-
-        mFastAdapter.withOnClickListener(new FastAdapter.OnClickListener<PredictionItem>() {
-                @Override
-                public boolean onClick(View v, IAdapter<PredictionItem> adapter, PredictionItem item, int position) {
-                    Toast.makeText(MainActivity.this, "Click on item with id: " + item.getTimestamp(),
-                            Toast.LENGTH_SHORT).show();
-                    return true;
-                }
-            });
-    }
-
     // -------------------------- LISTENER ---------------------------
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
+        // Check the sensor is the one we monitor
         if(sensorEvent.sensor.getType() != Sensor.TYPE_ACCELEROMETER)
             return;
 
+        // If we have enough samples, predict the activity, store in the DB and RESET the prediction
+        if (mPrediction.getSamples().size() == Constants.SAMPLE_SIZE)
+            predictAndStoreActivity();
+
+        // TODO Review -> Can be done from mPrediction.getSamples().last()
+        // Store the sensor values to update the UI
         sAllSensorData[0] = sensorEvent.values[0];
         sAllSensorData[1] = sensorEvent.values[1];
         sAllSensorData[2] = sensorEvent.values[2];
 
-        // Add the a new data sample to the
-        sensorDataBatch.add(new Sample(sAllSensorData[0], sAllSensorData[1], sAllSensorData[2]));
-        if(sensorDataBatch.size() == Constants.REALM_BATCH_SIZE) {
-            mRealmManager.get().storeSensorDataBatch(sensorDataBatch);
-            sensorDataBatch.clear();
-        }
-
-        if (sX.size() == Constants.SAMPLE_SIZE)
-            predictActivity();
-
-        sX.add(sensorEvent.values[0]);
-        sY.add(sensorEvent.values[1]);
-        sZ.add(sensorEvent.values[2]);
+        // Add the prediction to the list of samples
+        mPrediction.getSamples().add(
+                new Sample(sensorEvent.values[0], sensorEvent.values[1], sensorEvent.values[2]));
     }
 
     @Override
