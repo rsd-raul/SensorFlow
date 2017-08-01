@@ -4,24 +4,30 @@ import es.us.etsii.sensorflow.utils.PrimaryKeyFactory;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
-public class SensorData extends RealmObject {
+public class Sample extends RealmObject {
+
+    // ------------------------- ATTRIBUTES --------------------------
 
     @PrimaryKey
-    private long id = -1;
+    private long id;
     private long timestamp;
     private float accelerometerX;
     private float accelerometerY;
     private float accelerometerZ;
 
-    public SensorData() { }
+    // ------------------------- CONSTRUCTOR -------------------------
 
-    public SensorData(float accelerometerX, float accelerometerY, float accelerometerZ) {
+    public Sample() { }
+
+    public Sample(float accelerometerX, float accelerometerY, float accelerometerZ) {
         this.id = PrimaryKeyFactory.nextKey();
         this.timestamp = System.currentTimeMillis();
         this.accelerometerX = accelerometerX;
         this.accelerometerY = accelerometerY;
         this.accelerometerZ = accelerometerZ;
     }
+
+    // ---------------------- GETTERS & SETTERS ----------------------
 
     public long getId() {
         return id;

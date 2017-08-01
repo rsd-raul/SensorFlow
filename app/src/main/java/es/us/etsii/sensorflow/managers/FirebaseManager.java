@@ -12,7 +12,7 @@ import es.us.etsii.sensorflow.domain.User;
 public abstract class FirebaseManager {
 
     /**
-     * Create a user in our DB when the user registers for the first time
+     * Create a user in our DB when the user registers for the first totalTime
      */
     static void createUser(final User user){
         FirebaseDatabase database = FirebaseDatabase.getInstance();

@@ -3,13 +3,9 @@
 
     <string name="sensor_missing">Required Sensor Missing</string>
     <string name="sensor_missing_description">"An accelerometer is required to run this app.</string>
-    <!--<string name="sensor_missing_description">One of the following sensors is not present:-->
-        <!--\n\lBarometer\n\lAccelerometer\n\lMagnetometer\n\lGyroscope-->
-    <!--</string>-->
     <string name="y">Y</string>
     <string name="z">Z</string>
     <string name="x">X</string>
-    <!--<string name="u">U</string>-->
 
     <!--Sensors -->
 
@@ -36,5 +32,6 @@
     <string name="active_total">Active total</string>
     <string name="active_today">Active today</string>
     <string name="recognised">Recognised</string>
+    <string name="today">Today</string>
 
 </resources>

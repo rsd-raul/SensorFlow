@@ -76,6 +76,7 @@ dependencies {
 
     // FastAdapter - Mike Penz - https://github.com/mikepenz/FastAdapter
     compile('com.mikepenz:fastadapter:2.6.0@aar') { transitive = true }
+    compile 'com.mikepenz:fastadapter-commons:2.6.0@aar'
 
 
 }

@@ -8,10 +8,12 @@ import android.hardware.SensorManager;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
+import com.mikepenz.fastadapter.commons.adapters.FastItemAdapter;
 
 import javax.inject.Singleton;
 import dagger.Module;
 import dagger.Provides;
+import es.us.etsii.sensorflow.views.PredictionItem;
 import io.realm.Realm;
 
 @Module
@@ -36,12 +38,7 @@ class AppModule {
 
     @Provides
     Sensor[] criticalSensorsProvider(SensorManager sensorManager){
-        return new Sensor[]{
-                /*sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE),*/
-                sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)/*,
-                sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
-                sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)*/
-        };
+        return new Sensor[]{ sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) };
     }
 
     @Provides
@@ -58,5 +55,15 @@ class AppModule {
     @Provides
     Realm realmProvider(){
         return Realm.getDefaultInstance();
+    }
+
+    @Provides
+    PredictionItem predictionItemProvider(){
+        return new PredictionItem();
+    }
+
+    @Provides
+    FastItemAdapter<PredictionItem> fastItemAdapterProvider(){
+        return new FastItemAdapter<>();
     }
 }

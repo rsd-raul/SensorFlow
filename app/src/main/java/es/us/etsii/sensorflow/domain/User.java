@@ -4,9 +4,13 @@ import com.google.firebase.database.Exclude;
 
 public class User {
 
+    // ------------------------- ATTRIBUTES --------------------------
+
     private String id;
     private String name;
     private String email;
+
+    // ------------------------- CONSTRUCTOR -------------------------
 
     public User() { }
 
@@ -15,6 +19,8 @@ public class User {
         this.name = name;
         this.email = email;
     }
+
+    // ---------------------- GETTERS & SETTERS ----------------------
 
     @Exclude    // The Id is the key of the table, no need to store it again
     public String getId() {

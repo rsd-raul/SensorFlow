@@ -3,6 +3,8 @@ package es.us.etsii.sensorflow.domain;
 
 public class Event {
 
+    // ------------------------- ATTRIBUTES --------------------------
+
     private int type = -1;
     private double latitude = 0.0;
     private double longitude = 0.0;
@@ -10,7 +12,11 @@ public class Event {
     private float accuracy = 0.0f;
     private long timestamp = 0L;
 
+    // ------------------------- CONSTRUCTOR -------------------------
+
     public Event() { }
+
+    // ---------------------- GETTERS & SETTERS ----------------------
 
     public int getType() {
         return type;

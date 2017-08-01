@@ -4,22 +4,41 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import es.us.etsii.sensorflow.domain.SensorData;
+import es.us.etsii.sensorflow.domain.Prediction;
+import es.us.etsii.sensorflow.domain.Sample;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
 @Singleton
 public class RealmManager {
 
+    // ------------------------- ATTRIBUTES --------------------------
+
     private Realm mRealm;
+
+    // ------------------------- CONSTRUCTOR -------------------------
 
     @Inject
     RealmManager(Realm mRealm) {
         this.mRealm = mRealm;
     }
 
+    // -------------------------- USE CASES --------------------------
+
+    public void storePrediction(final Prediction prediction){
+        mRealm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                mRealm.copyToRealm(prediction);
+
+//                Check if Samples are stored as a result of the prediction
+                System.out.println("SIZE : " + findAllSensorData().size());
+            }
+        });
+    }
+
     // FIXME Needs to be async
-    public void storeSensorDataBatch(final List<SensorData> sensorDataBatch){
+    public void storeSensorDataBatch(final List<Sample> sensorDataBatch){
         mRealm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
@@ -28,8 +47,8 @@ public class RealmManager {
         });
     }
 
-    public RealmResults<SensorData> findAllSensorData(){
-        return mRealm.where(SensorData.class).findAll();
+    public RealmResults<Sample> findAllSensorData(){
+        return mRealm.where(Sample.class).findAll();
     }
 
     public void openRealm(){
