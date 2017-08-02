@@ -5,7 +5,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.mikepenz.fastadapter.items.AbstractItem;
 import java.util.List;
@@ -31,8 +30,8 @@ public class PredictionItem extends AbstractItem<PredictionItem, PredictionItem.
 
     public PredictionItem withPrediction(int typeIndex, long timestamp) {
         this.timestamp = timestamp;
-        this.activityRes = Constants.ACTIVITY_IMAGES[typeIndex];
-        this.nameRes = Constants.ACTIVITY_NAMES[typeIndex];
+        this.activityRes = Constants.PREDICTION_IMAGES[typeIndex];
+        this.nameRes = Constants.PREDICTION_NAMES[typeIndex];
         this.totalTime = Constants.M_ELAPSED_PER_SAMPLE;
 
         return this;

@@ -17,7 +17,7 @@ public class TensorFlowClassifier {
     private static final int OUTPUT_SIZE = 6;
 
     @Inject
-    public TensorFlowClassifier(final Context context) {
+    TensorFlowClassifier(final Context context) {
         inferenceInterface = new TensorFlowInferenceInterface(context.getAssets(), MODEL_FILE);
     }
 

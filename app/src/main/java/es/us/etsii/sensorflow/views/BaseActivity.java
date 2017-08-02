@@ -13,8 +13,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     /**
-     * Implement and call component.inject(this) for dependency
-     * injection of the Activity.
+     * When implementing, call component.inject(this) for injecting dependencies on the Activity.
      */
     protected abstract void inject(App.AppComponent component);
 }

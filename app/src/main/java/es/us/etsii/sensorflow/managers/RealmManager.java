@@ -29,7 +29,7 @@ public class RealmManager {
         mRealm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                mRealm.copyToRealm(prediction);
+                mRealm.copyToRealmOrUpdate(prediction);
 
 //                Check if Samples are stored as a result of the prediction
                 System.out.println("SIZE : " + findAllSensorData().size());

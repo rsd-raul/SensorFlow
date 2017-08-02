@@ -29,13 +29,12 @@ public abstract class Constants {
     private static final double SAMPLING_PERIOD_M = (1000/FREQUENCY_HZ) * MS2S * S2M;
     public static final double M_ELAPSED_PER_SAMPLE = (SAMPLE_SIZE / (100/OVERLAPPING_PERCENTAGE)) * SAMPLING_PERIOD_M;
 
+    //FIXME: New icon for stairs_down
+    public static final int[] PREDICTION_IMAGES = {R.drawable.ic_stairs_down_24dp,
+            R.drawable.ic_run_24dp, R.drawable.ic_seat_24dp, R.drawable.ic_standing_24dp,
+            R.drawable.ic_stairs_up_24dp, R.drawable.ic_walk_24dp};
+    public static final int[] PREDICTION_NAMES = {R.string.downstairs, R.string.jogging,
+            R.string.sitting, R.string.standing, R.string.upstairs, R.string.walking};
     public static final int STAIRS_DOWN_INDEX = 0, RUNNING_INDEX = 1, SEATED_INDEX = 2,
             STANDING_INDEX = 3, STAIRS_UP_INDEX = 4, WALKING_INDEX = 5;
-    //FIXME: New icon for stairs_down
-    public static final int[] ACTIVITY_IMAGES = {R.drawable.ic_stairs_down_24dp, R.drawable.ic_run_24dp,
-            R.drawable.ic_seat_24dp, R.drawable.ic_standing_24dp, R.drawable.ic_stairs_up_24dp,
-            R.drawable.ic_walk_24dp};
-
-    public static final int[] ACTIVITY_NAMES = {R.string.downstairs, R.string.jogging,
-            R.string.sitting, R.string.standing, R.string.upstairs, R.string.walking};
 }

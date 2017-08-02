@@ -33,7 +33,7 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
 
     // --------------------------- VALUES ----------------------------
 
-//    private static final String TAG = "AuthManager";
+    private static final String TAG = "AuthManager";
 
     // ------------------------- ATTRIBUTES --------------------------
 

@@ -55,8 +55,8 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     // ------------------------- ATTRIBUTES --------------------------
 
     @BindView(R.id.startAndStopFAB) FloatingActionButton startAndStopFAB;
-    @BindView(R.id.iv_current_activity) ImageView currentActivityIV;
-    @BindView(R.id.tv_current_activity) TextView currentActivityTV;
+    @BindView(R.id.iv_current_activity) ImageView currentPredictionIV;
+    @BindView(R.id.tv_current_activity) TextView currentPredictionTV;
     @BindViews({R.id.tv_ace_x, R.id.tv_ace_y, R.id.tv_ace_z}) List<TextView> mSensorsInfoTVs;
     @BindView(R.id.tv_today_time) TextView mTodayTimeTV;
     @BindView(R.id.tv_total_time) TextView mTotalTimeTV;
@@ -97,15 +97,6 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         todaysActivitiesRV.setAdapter(mFastAdapter);
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        // Result from GoogleSignInApi
-        if (requestCode == Constants.GOOGLE_AUTH)
-            mAuthManager.handleSignInResult(data);
-    }
-
     // --------------------------- STATES ----------------------------
 
     @Override
@@ -127,60 +118,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         mTotalExercise = -1;
     }
 
-    // ------------------------- AUXILIARY ---------------------------
-
-    private float[] mergeAndFormatData() {
-        // The array Sum will be the aggregation of all the accelerometer's data
-        float[] arraySum = new float[mPrediction.getSamples().size() * 3];
-        int samplesSize = mPrediction.getSamples().size();
-
-        // Iterate over the samples and introduce the data on the correct position
-        for (int i = 0; i < samplesSize; i++) {
-            Sample sample = mPrediction.getSamples().get(i);
-
-            arraySum[i] = sample.getAccelerometerX();
-            arraySum[i + samplesSize] = sample.getAccelerometerY();
-            arraySum[i + samplesSize * 2] = sample.getAccelerometerZ();
-        }
-        return arraySum;
-    }
-
-    public boolean isUserActive(int eventIndex) {
-        return eventIndex == Constants.RUNNING_INDEX || eventIndex == Constants.WALKING_INDEX ||
-               eventIndex == Constants.STAIRS_UP_INDEX || eventIndex == Constants.STAIRS_DOWN_INDEX;
-    }
-
     // -------------------------- USE CASES --------------------------
-
-    private void registerSensorListener() {
-        for (Sensor sensor : mCriticalSensors.get()) {
-            // Check existence, despite the Manifest requirements, a user can side-load the apk
-            if (sensor == null)
-                DialogUtils.criticalErrorDialog(this, R.string.sensor_missing,
-                        R.string.sensor_missing_description);
-            else
-                mSensorManager.get().registerListener(this, sensor, Constants.SAMPLING_PERIOD_US);
-        }
-    }
-
-    /**
-     * Once every UI_REFRESH_RATE_MS update sensor values with the data stored in sAllSensorData.
-     */
-    private void updateSensorValuesUI() {
-        RUNNING = true;
-
-        // Using a handler to create a recurrent task
-        final Handler h = new Handler();
-        h.postDelayed(new Runnable() {
-            public void run() {
-                // Apply the same action to all the views
-                ButterKnife.apply(mSensorsInfoTVs, UPDATE);
-
-                if (RUNNING)
-                    h.postDelayed(this, Constants.UI_REFRESH_RATE_MS);
-            }
-        }, Constants.UI_REFRESH_RATE_MS);
-    }
 
     @OnClick(R.id.startAndStopFAB)
     void clickRunAndStop() {
@@ -239,7 +177,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         mPrediction.complete(index, System.currentTimeMillis());
         mRealmManager.get().storePrediction(mPrediction);
 
-        updateCurrentActivity(index);
+        updateCurrentPrediction(index);
         checkIfDangerousEvent(index);
 
         // Reset the prediction once stored and UI updated
@@ -272,22 +210,82 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
                     }
                 });
     }
+
+    // ------------------------- AUXILIARY ---------------------------
+
+    // FIXME use the DB to calculate
+    private void calculateTodayAndTotal() {
+        mTodayExercise = 0;
+        mTotalExercise = 0;
+    }
+
+    private float[] mergeAndFormatData() {
+        // The array Sum will be the aggregation of all the accelerometer's data
+        float[] arraySum = new float[mPrediction.getSamples().size() * 3];
+        int samplesSize = mPrediction.getSamples().size();
+
+        // Iterate over the samples and introduce the data on the correct position
+        for (int i = 0; i < samplesSize; i++) {
+            Sample sample = mPrediction.getSamples().get(i);
+
+            arraySum[i] = sample.getAccelerometerX();
+            arraySum[i + samplesSize] = sample.getAccelerometerY();
+            arraySum[i + samplesSize * 2] = sample.getAccelerometerZ();
+        }
+        return arraySum;
+    }
+
+    public boolean isUserActive(int eventIndex) {
+        return eventIndex == Constants.RUNNING_INDEX || eventIndex == Constants.WALKING_INDEX ||
+                eventIndex == Constants.STAIRS_UP_INDEX || eventIndex == Constants.STAIRS_DOWN_INDEX;
+    }
+
+    private void registerSensorListener() {
+        for (Sensor sensor : mCriticalSensors.get()) {
+            // Check existence, despite the Manifest requirements, a user can side-load the apk
+            if (sensor == null)
+                DialogUtils.criticalErrorDialog(this, R.string.sensor_missing,
+                        R.string.sensor_missing_description);
+            else
+                mSensorManager.get().registerListener(this, sensor, Constants.SAMPLING_PERIOD_US);
+        }
+    }
+
     // -------------------------- INTERFACE --------------------------
 
-    private final ButterKnife.Action<TextView> UPDATE = new ButterKnife.Action<TextView>() {
+    /**
+     * Once every UI_REFRESH_RATE_MS update sensor values with the data stored in sAllSensorData.
+     */
+    private void updateSensorValuesUI() {
+        RUNNING = true;
+
+        // Using a handler to create a recurrent task
+        final Handler h = new Handler();
+        h.postDelayed(new Runnable() {
+            public void run() {
+                // Apply the same action to all the views
+                ButterKnife.apply(mSensorsInfoTVs, UPDATE_TV);
+
+                if (RUNNING)
+                    h.postDelayed(this, Constants.UI_REFRESH_RATE_MS);
+            }
+        }, Constants.UI_REFRESH_RATE_MS);
+    }
+
+    private final ButterKnife.Action<TextView> UPDATE_TV = new ButterKnife.Action<TextView>() {
         @Override
         public void apply(@NonNull TextView view, int index) {
             view.setText(String.valueOf(sAllSensorData[index]));
         }
     };
 
-    private void updateCurrentActivity(final int eventIndex) {
-        int activityImageRes = Constants.ACTIVITY_IMAGES[eventIndex];
-        int activityNameRes = Constants.ACTIVITY_NAMES[eventIndex];
+    private void updateCurrentPrediction(final int eventIndex) {
+        int activityImageRes = Constants.PREDICTION_IMAGES[eventIndex];
+        int activityNameRes = Constants.PREDICTION_NAMES[eventIndex];
 
-        currentActivityIV.setImageResource(activityImageRes);
-        currentActivityTV.setText(activityNameRes);
-        currentActivityIV.setContentDescription(currentActivityTV.getText());
+        currentPredictionTV.setText(activityNameRes);
+        currentPredictionIV.setImageResource(activityImageRes);
+        currentPredictionIV.setContentDescription(currentPredictionTV.getText());
 
         // Add the prediction to the list or modify it's values
         addPredictionToList();
@@ -322,14 +320,11 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 //        mFastAdapter.notifyDataSetChanged();
     }
 
-    // FIXME use the DB to calculate
-    private void calculateTodayAndTotal() {
-        mTodayExercise = 0;
-        mTotalExercise = 0;
-    }
-
     // -------------------------- LISTENER ---------------------------
 
+    /**
+     * Sensor data capture every Xms
+     */
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         // Check the sensor is the one we monitor
@@ -350,7 +345,18 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         mPrediction.getSamples().add(
                 new Sample(sensorEvent.values[0], sensorEvent.values[1], sensorEvent.values[2]));
     }
-
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) { /* Do nothing */ }
+
+    /**
+     * Google SignIn completed
+     */
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // Result from GoogleSignInApi
+        if (requestCode == Constants.GOOGLE_AUTH)
+            mAuthManager.handleSignInResult(data);
+    }
 }
