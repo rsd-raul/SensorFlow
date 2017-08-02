@@ -68,7 +68,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     @Inject Lazy<TensorFlowClassifier> mClassifier;
     @Inject Lazy<FusedLocationProviderClient> mFusedLocationClient;
     @Inject FastItemAdapter<PredictionItem> mFastAdapter;
-    @Inject Provider<PredictionItem> mActivityItemProvider;
+    @Inject Provider<PredictionItem> mPredictionItemProvider;
     private static Prediction mPrediction;
     private static float[] sAllSensorData = new float[3];
     private boolean RUNNING = false;
@@ -294,13 +294,13 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         if(mTodayExercise == -1 && mTotalExercise == -1)
             calculateTodayAndTotal();
         else if(isUserActive(eventIndex)) {
-            mTodayExercise += Constants.M_ELAPSED_PER_SAMPLE;
-            mTotalExercise += Constants.M_ELAPSED_PER_SAMPLE;
+            mTodayExercise += Constants.S_ELAPSED_PER_SAMPLE;
+            mTotalExercise += Constants.S_ELAPSED_PER_SAMPLE;
         }
 
         // Update total and today's time counter
-        mTodayTimeTV.setText(Utils.getCustomDurationString(this, (int) Math.floor(mTodayExercise)));
-        mTotalTimeTV.setText(Utils.getCustomDurationString(this, (int) Math.floor(mTotalExercise)));
+        mTodayTimeTV.setText(Utils.getCustomHHmmssString(this, (int) Math.floor(mTodayExercise)));
+        mTotalTimeTV.setText(Utils.getCustomHHmmssString(this, (int) Math.floor(mTotalExercise)));
     }
 
     private void addPredictionToList() {
@@ -309,15 +309,15 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         // Get the last item in the list if there is one
         PredictionItem lastItem = itemCount > 0 ? mFastAdapter.getAdapterItem(itemCount - 1) : null;
 
-        // If the last item
-        if(lastItem != null && lastItem.getType() == mPrediction.getType())
-            lastItem.addToTotalTime(Constants.M_ELAPSED_PER_SAMPLE);
-        else
-            mFastAdapter.add(mActivityItemProvider.get()
-                    .withPrediction(mPrediction.getType(), mPrediction.getTimestamp()));
-
-        // TODO necessary?
-//        mFastAdapter.notifyDataSetChanged();
+        // If the last item exists and is the same time as the new prediction, modify the value
+        if(lastItem != null && lastItem.getPredictionType() == mPrediction.getType()) {
+            double newTotalTime = lastItem.getTotalTime() + Constants.S_ELAPSED_PER_SAMPLE;
+            lastItem.addToTotalTime(Utils.getCustomHHmmssString(this, newTotalTime));
+            mFastAdapter.notifyAdapterItemChanged(itemCount-1);     // More efficient than DataSetChanged
+        } else {
+            CharSequence totalTime = Utils.getCustomHHmmssString(this, Constants.S_ELAPSED_PER_SAMPLE);
+            mFastAdapter.add(mPredictionItemProvider.get().withPrediction(mPrediction.getType(), totalTime));
+        }
     }
 
     // -------------------------- LISTENER ---------------------------

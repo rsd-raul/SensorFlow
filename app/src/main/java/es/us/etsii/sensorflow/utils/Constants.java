@@ -26,8 +26,8 @@ public abstract class Constants {
     public static final int OVERLAP_FROM_INDEX = (int) Math.ceil(SAMPLE_SIZE * (OVERLAPPING_PERCENTAGE/100));
     public static final int SAMPLING_PERIOD_US = Math.round((1000/FREQUENCY_HZ) * MS2US);
 
-    private static final double SAMPLING_PERIOD_M = (1000/FREQUENCY_HZ) * MS2S * S2M;
-    public static final double M_ELAPSED_PER_SAMPLE = (SAMPLE_SIZE / (100/OVERLAPPING_PERCENTAGE)) * SAMPLING_PERIOD_M;
+    private static final double SAMPLING_PERIOD_S = (1000/FREQUENCY_HZ) * MS2S;
+    public static final double S_ELAPSED_PER_SAMPLE = (SAMPLE_SIZE / (100/OVERLAPPING_PERCENTAGE)) * SAMPLING_PERIOD_S;
 
     //FIXME: New icon for stairs_down
     public static final int[] PREDICTION_IMAGES = {R.drawable.ic_stairs_down_24dp,

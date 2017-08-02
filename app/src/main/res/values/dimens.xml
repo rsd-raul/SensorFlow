@@ -2,6 +2,6 @@
 <resources>
     <dimen name="fab_margin">16dp</dimen>
 
-    <dimen name="hour_size">16sp</dimen>
-    <dimen name="minute_size">10sp</dimen>
+    <dimen name="time_size">16sp</dimen>
+    <dimen name="unit_size">10sp</dimen>
 </resources>

@@ -29,6 +29,7 @@
     <string name="walking">Walking</string>
     <string name="hour_unit">H</string>
     <string name="minute_unit">M</string>
+    <string name="second_unit">S</string>
     <string name="active_total">Active total</string>
     <string name="active_today">Active today</string>
     <string name="recognised">Recognised</string>
