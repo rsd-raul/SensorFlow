@@ -342,7 +342,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         sAllSensorData[2] = sensorEvent.values[2];
 
         // Add the prediction to the list of samples
-        mPrediction.getSamples().add(
+        mPrediction.addSample(
                 new Sample(sensorEvent.values[0], sensorEvent.values[1], sensorEvent.values[2]));
     }
     @Override

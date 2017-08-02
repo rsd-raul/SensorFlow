@@ -1,6 +1,7 @@
 package es.us.etsii.sensorflow.managers;
 
-import java.util.List;
+import android.util.Log;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -11,6 +12,10 @@ import io.realm.RealmResults;
 
 @Singleton
 public class RealmManager {
+
+    // --------------------------- VALUES ----------------------------
+
+    private static final String TAG = "RealmManager";
 
     // ------------------------- ATTRIBUTES --------------------------
 
@@ -25,30 +30,31 @@ public class RealmManager {
 
     // -------------------------- USE CASES --------------------------
 
+    /**
+     * Store the current Prediction along with the Samples used to calculate it.
+     *
+     * @param prediction Prediction containing Samples
+     */
     public void storePrediction(final Prediction prediction){
+        // FIXME Ideally async -> IllegalStateException currently
         mRealm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 mRealm.copyToRealmOrUpdate(prediction);
 
-//                Check if Samples are stored as a result of the prediction
-                System.out.println("SIZE : " + findAllSensorData().size());
+                // TODO - Testing only - Remove before delivery
+//                Log.e(TAG, "storePrediction: findAllSamples: " + findAllSamples().size());
+//                Log.e(TAG, "storePrediction: findAllPredictions: " + findAllPredictions().size());
             }
         });
     }
 
-    // FIXME Needs to be async
-    public void storeSensorDataBatch(final List<Sample> sensorDataBatch){
-        mRealm.executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                mRealm.copyToRealm(sensorDataBatch);
-            }
-        });
-    }
-
-    public RealmResults<Sample> findAllSensorData(){
+    public RealmResults<Sample> findAllSamples(){
         return mRealm.where(Sample.class).findAll();
+    }
+
+    public RealmResults<Prediction> findAllPredictions(){
+        return mRealm.where(Prediction.class).findAll();
     }
 
     public void openRealm(){

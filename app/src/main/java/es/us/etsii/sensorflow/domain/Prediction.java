@@ -50,22 +50,10 @@ public class Prediction extends RealmObject {
     public Prediction reset(int overlapIndex) {
         this.id = PrimaryKeyFactory.nextKey();
 
-        // Cast to list
-//        this.samples = this.samples.subList(overlapIndex, samples.size());
-
-        //TODO - OPTION A - Should work, bad on cpu
-//        int times = samples.size() - overlapIndex;
-//        while (times-- != 0)
-//            samples.remove(times);
-
-        //TODO - OPTION B - Should be efficient, if it works
-        samples.removeAll(samples.subList(0, overlapIndex));
-
-        //TODO - OPTION C - Should work, bad on memory
-//        RealmList<Sample> temp = new RealmList<>();
-//        for (int i = overlapIndex; i < samples.size(); i++)
-//            temp.add(samples.get(i));
-//        samples = temp;
+        RealmList<Sample> temp = new RealmList<>();
+        for (int i = overlapIndex; i < samples.size(); i++)
+            temp.add(samples.get(i));
+        samples = temp;
 
         return this;
     }
