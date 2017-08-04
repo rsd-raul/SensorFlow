@@ -16,11 +16,15 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.FirebaseApp;
@@ -41,7 +45,7 @@ import es.us.etsii.sensorflow.domain.Sample;
 import es.us.etsii.sensorflow.managers.AuthManager;
 import es.us.etsii.sensorflow.managers.FirebaseManager;
 import es.us.etsii.sensorflow.managers.RealmManager;
-import es.us.etsii.sensorflow.utils.TensorFlowClassifier;
+import es.us.etsii.sensorflow.classifiers.TensorFlowClassifier;
 import es.us.etsii.sensorflow.utils.Constants;
 import es.us.etsii.sensorflow.utils.DialogUtils;
 import es.us.etsii.sensorflow.utils.Utils;
@@ -84,17 +88,22 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Setup activity and bind views
         setContentView(R.layout.activity_main);
-
-        // Start up
         ButterKnife.bind(this);
-        // FIXME check for Internet connection first
-        FirebaseApp.initializeApp(this);
-        mAuthManager.init(this);  // TODO Run in background? Skipping frames...
 
-        // Setup Today's recycler view
+        // Setup Today's recycler view using the DB
         todaysActivitiesRV.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         todaysActivitiesRV.setAdapter(mFastAdapter);
+        for (Prediction prediction : mRealmManager.get().findPredictionsToday())
+            addPredictionToTodaysRV(prediction);
+
+        // Calculate total and today's active time using the DB
+        mTodayExercise = mRealmManager.get().findActiveSecondsToday();
+        mTotalExercise = mRealmManager.get().findActiveSecondsTotal();
+        setCustomHHmmss(mTodayTimeTV, mTodayExercise);
+        setCustomHHmmss(mTotalTimeTV, mTotalExercise);
     }
 
     // --------------------------- STATES ----------------------------
@@ -132,6 +141,10 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
         // Depending on the action required, stop or start the service (and customize FAB)
         if (RUNNING) {
+            // Notify if starting without Firebase login
+            if(!mAuthManager.isLoggedFirebase())
+                Toast.makeText(this, "Not reporting to Firebase", Toast.LENGTH_SHORT).show();
+
             dra = R.drawable.ic_stop_24dp;
             col = R.color.redDark;
 
@@ -177,8 +190,14 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         mPrediction.complete(index, System.currentTimeMillis());
         mRealmManager.get().storePrediction(mPrediction);
 
-        updateCurrentPrediction(index);
-        checkIfDangerousEvent(index);
+
+        // Add the prediction to the list or modify it's values
+        addPredictionToTodaysRV(mPrediction);
+        updateUICurrentPrediction(index);
+
+        // If the user is logged into Firebase, check if the prediction is worth sending
+        if(mAuthManager.isLoggedFirebase())
+            checkIfDangerousEvent(index);
 
         // Reset the prediction once stored and UI updated
         mPrediction.reset(Constants.OVERLAP_FROM_INDEX);
@@ -253,6 +272,14 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
     // -------------------------- INTERFACE --------------------------
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
     /**
      * Once every UI_REFRESH_RATE_MS update sensor values with the data stored in sAllSensorData.
      */
@@ -279,16 +306,13 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         }
     };
 
-    private void updateCurrentPrediction(final int eventIndex) {
+    private void updateUICurrentPrediction(final int eventIndex) {
         int activityImageRes = Constants.PREDICTION_IMAGES[eventIndex];
         int activityNameRes = Constants.PREDICTION_NAMES[eventIndex];
 
         currentPredictionTV.setText(activityNameRes);
         currentPredictionIV.setImageResource(activityImageRes);
         currentPredictionIV.setContentDescription(currentPredictionTV.getText());
-
-        // Add the prediction to the list or modify it's values
-        addPredictionToList();
 
         // Recalculate the exercises done today in case of activity
         if(mTodayExercise == -1 && mTotalExercise == -1)
@@ -299,25 +323,29 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         }
 
         // Update total and today's time counter
-        mTodayTimeTV.setText(Utils.getCustomHHmmssString(this, (int) Math.floor(mTodayExercise)));
-        mTotalTimeTV.setText(Utils.getCustomHHmmssString(this, (int) Math.floor(mTotalExercise)));
+        setCustomHHmmss(mTodayTimeTV, mTodayExercise);
+        setCustomHHmmss(mTotalTimeTV, mTotalExercise);
     }
 
-    private void addPredictionToList() {
+    private void addPredictionToTodaysRV(Prediction prediction) {
         int itemCount = mFastAdapter.getAdapterItemCount();
 
         // Get the last item in the list if there is one
         PredictionItem lastItem = itemCount > 0 ? mFastAdapter.getAdapterItem(itemCount - 1) : null;
 
         // If the last item exists and is the same time as the new prediction, modify the value
-        if(lastItem != null && lastItem.getPredictionType() == mPrediction.getType()) {
+        if(lastItem != null && lastItem.getPredictionType() == prediction.getType()) {
             double newTotalTime = lastItem.getTotalTime() + Constants.S_ELAPSED_PER_SAMPLE;
             lastItem.addToTotalTime(Utils.getCustomHHmmssString(this, newTotalTime));
             mFastAdapter.notifyAdapterItemChanged(itemCount-1);     // More efficient than DataSetChanged
         } else {
             CharSequence totalTime = Utils.getCustomHHmmssString(this, Constants.S_ELAPSED_PER_SAMPLE);
-            mFastAdapter.add(mPredictionItemProvider.get().withPrediction(mPrediction.getType(), totalTime));
+            mFastAdapter.add(mPredictionItemProvider.get().withPrediction(prediction.getType(), totalTime));
         }
+    }
+
+    private void setCustomHHmmss(TextView tv, double timeMs){
+        tv.setText(Utils.getCustomHHmmssString(this, (int) Math.floor(timeMs)));
     }
 
     // -------------------------- LISTENER ---------------------------
@@ -358,5 +386,27 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         // Result from GoogleSignInApi
         if (requestCode == Constants.GOOGLE_AUTH)
             mAuthManager.handleSignInResult(data);
+    }
+
+    /**
+     * Toolbar menu item clicked
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // React depending on the item selected
+        switch (item.getItemId()){
+
+            // Handle sign IN and OUT
+            case R.id.action_login:
+                if(!mAuthManager.isLoggedFirebase()) {
+                    FirebaseApp.initializeApp(this);    // FIXME check for Internet connection first
+                    mAuthManager.init(this);            // TODO Run in background? Skipping frames...
+                } else
+                    mAuthManager.signOut();
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 }

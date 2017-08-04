@@ -85,7 +85,15 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
     }
 
     public void signOut(){
-        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(this);
+        mGoogleApiClient.stopAutoManage(mActivity);
+        mGoogleApiClient.disconnect();
+        mFirebaseAuth.signOut();
+        Toast.makeText(mActivity, R.string.disconnected_firebase, Toast.LENGTH_SHORT).show();
+        sUser = null;
+    }
+
+    public boolean isLoggedFirebase() {
+        return sUser != null;
     }
 
     // -------------------------- LISTENER ---------------------------
@@ -100,7 +108,7 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
         if (task.isSuccessful() && user != null) {
             sUser = new User(user.getUid(), user.getDisplayName(), user.getEmail());
             FirebaseManager.createUser(sUser);
-            Toast.makeText(mActivity, "CONNECTED to FIREBASE", Toast.LENGTH_SHORT).show();
+            Toast.makeText(mActivity, R.string.connected_firebase, Toast.LENGTH_SHORT).show();
         } else
             handleConnectionFail();
     }

@@ -34,5 +34,11 @@
     <string name="active_today">Active today</string>
     <string name="recognised">Recognised</string>
     <string name="today">Today</string>
+    <string name="no_content">-</string>
+    <string name="service_stopped">Service stopped</string>
+    <string name="no_data">NO DATA</string>
+    <string name="firebase_login">Firebase login</string>
+    <string name="disconnected_firebase">DISCONNECTED from FIREBASE</string>
+    <string name="connected_firebase">CONNECTED to FIREBASE</string>
 
 </resources>

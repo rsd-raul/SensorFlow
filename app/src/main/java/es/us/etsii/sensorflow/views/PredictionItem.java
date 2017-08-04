@@ -7,6 +7,9 @@ import android.widget.TextView;
 import com.mikepenz.fastadapter.items.AbstractItem;
 import java.util.List;
 import javax.inject.Inject;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import es.us.etsii.sensorflow.R;
 import es.us.etsii.sensorflow.utils.Constants;
 
@@ -75,7 +78,9 @@ public class PredictionItem extends AbstractItem<PredictionItem, PredictionItem.
         viewHolder.totalTimeTV.setText(totalTimeCS);
     }
 
-    //reset the view here (this is an optional method, but recommended)
+    /**
+     * Reset the view here (Optional but recommended)
+     */
     @Override
     public void unbindView(ViewHolder holder) {
         super.unbindView(holder);
@@ -84,7 +89,6 @@ public class PredictionItem extends AbstractItem<PredictionItem, PredictionItem.
 //        holder.activityIV.setImageResource(-1);
     }
 
-    //Init the viewHolder for this Item
     @Override
     public ViewHolder getViewHolder(View v) {
         return new ViewHolder(v);
@@ -92,19 +96,17 @@ public class PredictionItem extends AbstractItem<PredictionItem, PredictionItem.
 
     // ------------------------- VIEW HOLDER -------------------------
 
-    //The viewHolder used for this item. This viewHolder is always reused by the RecyclerView so scrolling is blazing fast
+    /**
+     * ViewHolder used for this item, only bind views.
+     */
     static class ViewHolder extends RecyclerView.ViewHolder {
-
-        TextView nameTV;
-        TextView totalTimeTV;
-        ImageView activityIV;
+        @BindView(R.id.tv_item_activity) TextView nameTV;
+        @BindView(R.id.tv_item_time) TextView totalTimeTV;
+        @BindView(R.id.iv_item_activity) ImageView activityIV;
 
         ViewHolder(View view) {
             super(view);
-
-            this.nameTV = (TextView) view.findViewById(R.id.tv_item_activity);
-            this.totalTimeTV = (TextView) view.findViewById(R.id.tv_item_time);
-            this.activityIV = (ImageView) view.findViewById(R.id.iv_item_activity);
+            ButterKnife.bind(this, view);
         }
     }
 }

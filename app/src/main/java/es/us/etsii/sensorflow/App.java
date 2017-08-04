@@ -35,7 +35,7 @@ public class App extends Application {
                 .build();
         appComponent.inject(this);
 
-//         Set the RealmConfiguration and PrimaryKeyFactory for Realm usage
+        // Set the RealmConfiguration and PrimaryKeyFactory for Realm usage
         Realm.init(this);
         RealmConfiguration realmConfiguration = new RealmConfiguration.Builder()
                 .schemaVersion(0)

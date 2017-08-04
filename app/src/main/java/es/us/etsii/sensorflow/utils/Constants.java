@@ -7,17 +7,15 @@ public abstract class Constants {
     // Configurable:
 
     private static final int FREQUENCY_HZ = 50;
-    private static final double SAMPLE_WINDOW_S = 4.0;      // Needs 200 as sample size
+    private static final double SAMPLE_WINDOW_S = 4.0;          // Needs 200 as sample size
     private static final double OVERLAPPING_PERCENTAGE = 50;    // FIXME test with overlap 0
     public static final int ACTIVITY_TO_REPORT = Constants.STANDING_INDEX;
-    public static final int REALM_BATCH_SIZE = 100;
 
     // Constants:
 
     public static final int GOOGLE_AUTH = 1;
     private static final int MS2US = 1000;
     private static final double MS2S = 0.001;
-    private static final double S2M = 0.0166666667;
     public static final int UI_REFRESH_RATE_MS = 1000;
 
     // TensorFlow Model:

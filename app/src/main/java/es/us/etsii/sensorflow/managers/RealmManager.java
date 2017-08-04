@@ -1,13 +1,14 @@
 package es.us.etsii.sensorflow.managers;
 
-import android.util.Log;
+import java.util.Calendar;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
 import es.us.etsii.sensorflow.domain.Prediction;
 import es.us.etsii.sensorflow.domain.Sample;
+import es.us.etsii.sensorflow.utils.Constants;
 import io.realm.Realm;
+import io.realm.RealmQuery;
 import io.realm.RealmResults;
 
 @Singleton
@@ -28,7 +29,31 @@ public class RealmManager {
         this.mRealm = mRealm;
     }
 
-    // -------------------------- USE CASES --------------------------
+    // ---------------------------- FIND -----------------------------
+
+    private RealmResults<Sample> findAllSamples(){
+        return mRealm.where(Sample.class).findAll();
+    }
+
+    private RealmResults<Prediction> findAllPredictions(){
+        return mRealm.where(Prediction.class).findAll();
+    }
+
+    public double findActiveSecondsToday(){
+        RealmResults<Prediction> rr = findPredictionsToday();
+        return filterByActive(rr).count() * Constants.S_ELAPSED_PER_SAMPLE;
+    }
+
+    public double findActiveSecondsTotal(){
+        RealmResults<Prediction> rr = findAllPredictions();
+        return filterByActive(rr).count() * Constants.S_ELAPSED_PER_SAMPLE;
+    }
+
+    public RealmResults<Prediction> findPredictionsToday(){
+        return findAllPredictions().where().greaterThanOrEqualTo("timestamp", getDayStart()).findAll();
+    }
+
+    // ---------------------------- SAVE -----------------------------
 
     /**
      * Store the current Prediction along with the Samples used to calculate it.
@@ -49,12 +74,26 @@ public class RealmManager {
         });
     }
 
-    public RealmResults<Sample> findAllSamples(){
-        return mRealm.where(Sample.class).findAll();
+    // --------------------------- DELETE ----------------------------
+
+    // -------------------------- AUXILIARY --------------------------
+
+    private RealmQuery<Prediction> filterByActive(RealmResults<Prediction> realmResults){
+        return realmResults.where()
+                .equalTo("type", Constants.RUNNING_INDEX).or()
+                .equalTo("type", Constants.WALKING_INDEX).or()
+                .equalTo("type", Constants.STAIRS_DOWN_INDEX).or()
+                .equalTo("type", Constants.STAIRS_UP_INDEX);
     }
 
-    public RealmResults<Prediction> findAllPredictions(){
-        return mRealm.where(Prediction.class).findAll();
+    private long getDayStart(){
+        // Get the current day/time and restart the values to 0h 0m 0s 0ms
+        Calendar todayCal = Calendar.getInstance();
+        todayCal.set(Calendar.HOUR_OF_DAY, 0);
+        todayCal.set(Calendar.MINUTE, 0);
+        todayCal.set(Calendar.SECOND, 0);
+        todayCal.set(Calendar.MILLISECOND, 0);
+        return todayCal.getTimeInMillis();
     }
 
     public void openRealm(){
