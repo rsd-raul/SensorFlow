@@ -69,6 +69,13 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
 
     // -------------------------- USE CASES --------------------------
 
+    public static String getUserId(){
+        if(sUser != null)
+            return sUser.getId();
+        else
+            return "anonymous";
+    }
+
     public void handleSignInResult(Intent data){
         GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
         GoogleSignInAccount acct = result.getSignInAccount();

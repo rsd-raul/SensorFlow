@@ -11,6 +11,18 @@ public abstract class Constants {
     private static final double OVERLAPPING_PERCENTAGE = 50;    // FIXME test with overlap 0
     public static final int ACTIVITY_TO_REPORT = Constants.STANDING_INDEX;
 
+    public static final String CSV_FILE_PREFIX = "DataSet_";
+    static final String CSV_FOLDER_NAME = "SensorFlow_Export";
+    static final char CSV_SEPARATOR = ',';
+
+    // CSVUtils Export
+
+    static final String COLUMN_USER = "user-id";
+    static final String COLUMN_TIMESTAMP = "timestamp";
+    static final String COLUMN_ACCELEROMETER_X = "acce-x";
+    static final String COLUMN_ACCELEROMETER_Y = "acce-y";
+    static final String COLUMN_ACCELEROMETER_Z = "acce-z";
+
     // Constants:
 
     public static final int GOOGLE_AUTH = 1;

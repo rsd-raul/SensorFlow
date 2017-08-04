@@ -23,6 +23,7 @@ import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
 import android.widget.ImageView;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -46,6 +47,7 @@ import es.us.etsii.sensorflow.managers.AuthManager;
 import es.us.etsii.sensorflow.managers.FirebaseManager;
 import es.us.etsii.sensorflow.managers.RealmManager;
 import es.us.etsii.sensorflow.classifiers.TensorFlowClassifier;
+import es.us.etsii.sensorflow.utils.CSVUtils;
 import es.us.etsii.sensorflow.utils.Constants;
 import es.us.etsii.sensorflow.utils.DialogUtils;
 import es.us.etsii.sensorflow.utils.Utils;
@@ -64,7 +66,8 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     @BindViews({R.id.tv_ace_x, R.id.tv_ace_y, R.id.tv_ace_z}) List<TextView> mSensorsInfoTVs;
     @BindView(R.id.tv_today_time) TextView mTodayTimeTV;
     @BindView(R.id.tv_total_time) TextView mTotalTimeTV;
-    @BindView(R.id.rv_todays_activities) RecyclerView todaysActivitiesRV;
+    @BindView(R.id.rv_todays_activities) RecyclerView mTodaysActivitiesRV;
+    @BindView(R.id.s_scroll) Switch mScrollS;
     @Inject AuthManager mAuthManager;
     @Inject Lazy<SensorManager> mSensorManager;
     @Inject Lazy<RealmManager> mRealmManager;
@@ -94,14 +97,14 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         ButterKnife.bind(this);
 
         // Setup Today's recycler view using the DB
-        todaysActivitiesRV.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        todaysActivitiesRV.setAdapter(mFastAdapter);
-        for (Prediction prediction : mRealmManager.get().findPredictionsToday())
+        mTodaysActivitiesRV.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        mTodaysActivitiesRV.setAdapter(mFastAdapter);
+        for (Prediction prediction : mRealmManager.get().findPredictionsFromDate(Utils.getDayStart()))
             addPredictionToTodaysRV(prediction);
 
         // Calculate total and today's active time using the DB
-        mTodayExercise = mRealmManager.get().findActiveSecondsToday();
-        mTotalExercise = mRealmManager.get().findActiveSecondsTotal();
+        mTodayExercise = mRealmManager.get().calculateActiveSecondsToday();
+        mTotalExercise = mRealmManager.get().calculateActiveSecondsTotal();
         setCustomHHmmss(mTodayTimeTV, mTodayExercise);
         setCustomHHmmss(mTotalTimeTV, mTotalExercise);
     }
@@ -337,11 +340,13 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         if(lastItem != null && lastItem.getPredictionType() == prediction.getType()) {
             double newTotalTime = lastItem.getTotalTime() + Constants.S_ELAPSED_PER_SAMPLE;
             lastItem.addToTotalTime(Utils.getCustomHHmmssString(this, newTotalTime));
-            mFastAdapter.notifyAdapterItemChanged(itemCount-1);     // More efficient than DataSetChanged
+            mFastAdapter.notifyAdapterItemChanged(itemCount-1);
         } else {
             CharSequence totalTime = Utils.getCustomHHmmssString(this, Constants.S_ELAPSED_PER_SAMPLE);
             mFastAdapter.add(mPredictionItemProvider.get().withPrediction(prediction.getType(), totalTime));
         }
+        if(mScrollS.isChecked())
+            mTodaysActivitiesRV.smoothScrollToPosition(itemCount);
     }
 
     private void setCustomHHmmss(TextView tv, double timeMs){
@@ -403,6 +408,11 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
                     mAuthManager.init(this);            // TODO Run in background? Skipping frames...
                 } else
                     mAuthManager.signOut();
+                return true;
+
+            // Handle exporting data
+            case R.id.action_export:
+                CSVUtils.exportToCSV(this);
                 return true;
 
             default:

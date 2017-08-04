@@ -78,7 +78,10 @@ dependencies {
     compile('com.mikepenz:fastadapter:2.6.0@aar') { transitive = true }
     compile 'com.mikepenz:fastadapter-commons:2.6.0@aar'
 
-
+    // OpenCsv - Apache Maven - http://opencsv.sourceforge.net/dependency-info.html
+    compile ('com.opencsv:opencsv:3.10'){
+        exclude module: 'commons-logging'
+    }
 }
 
 apply plugin: 'com.google.gms.google-services'  // Firebase

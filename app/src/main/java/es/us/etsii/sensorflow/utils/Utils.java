@@ -10,11 +10,12 @@ import android.text.style.AbsoluteSizeSpan;
 import android.text.style.ForegroundColorSpan;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import es.us.etsii.sensorflow.R;
 
-public class Utils {
+public abstract class Utils {
 
     /**
      * Converter and formatter from seconds to hours, minutes and seconds.
@@ -78,5 +79,15 @@ public class Utils {
         }
 
         return finalText;
+    }
+
+    public static long getDayStart(){
+        // Get the current day/time and restart the values to 0h 0m 0s 0ms
+        Calendar todayCal = Calendar.getInstance();
+        todayCal.set(Calendar.HOUR_OF_DAY, 0);
+        todayCal.set(Calendar.MINUTE, 0);
+        todayCal.set(Calendar.SECOND, 0);
+        todayCal.set(Calendar.MILLISECOND, 0);
+        return todayCal.getTimeInMillis();
     }
 }
