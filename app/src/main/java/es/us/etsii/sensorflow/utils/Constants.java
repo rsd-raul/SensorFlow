@@ -1,5 +1,9 @@
 package es.us.etsii.sensorflow.utils;
 
+import android.os.Environment;
+
+import java.io.File;
+
 import es.us.etsii.sensorflow.R;
 
 public abstract class Constants {
@@ -12,7 +16,8 @@ public abstract class Constants {
     public static final int ACTIVITY_TO_REPORT = Constants.STANDING_INDEX;
 
     public static final String CSV_FILE_PREFIX = "DataSet_";
-    static final String CSV_FOLDER_NAME = "SensorFlow_Export";
+    public static final String CSV_FOLDER_ROUTE = Environment.getExternalStorageDirectory().getPath()
+            + File.separator + "Download" + File.separator + "SensorFlow_Export";
     static final char CSV_SEPARATOR = ',';
 
     // CSVUtils Export
@@ -26,6 +31,7 @@ public abstract class Constants {
     // Constants:
 
     public static final int GOOGLE_AUTH = 1;
+    public static final String CSV_FOLDER = "key2";
     private static final int MS2US = 1000;
     private static final double MS2S = 0.001;
     public static final int UI_REFRESH_RATE_MS = 1000;

@@ -47,7 +47,6 @@ import es.us.etsii.sensorflow.managers.AuthManager;
 import es.us.etsii.sensorflow.managers.FirebaseManager;
 import es.us.etsii.sensorflow.managers.RealmManager;
 import es.us.etsii.sensorflow.classifiers.TensorFlowClassifier;
-import es.us.etsii.sensorflow.utils.CSVUtils;
 import es.us.etsii.sensorflow.utils.Constants;
 import es.us.etsii.sensorflow.utils.DialogUtils;
 import es.us.etsii.sensorflow.utils.Utils;
@@ -100,7 +99,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         mTodaysActivitiesRV.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         mTodaysActivitiesRV.setAdapter(mFastAdapter);
         for (Prediction prediction : mRealmManager.get().findPredictionsFromDate(Utils.getDayStart()))
-            addPredictionToTodaysRV(prediction);
+            addPredictionToTodayRV(prediction);
 
         // Calculate total and today's active time using the DB
         mTodayExercise = mRealmManager.get().calculateActiveSecondsToday();
@@ -195,7 +194,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
 
         // Add the prediction to the list or modify it's values
-        addPredictionToTodaysRV(mPrediction);
+        addPredictionToTodayRV(mPrediction);
         updateUICurrentPrediction(index);
 
         // If the user is logged into Firebase, check if the prediction is worth sending
@@ -330,7 +329,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         setCustomHHmmss(mTotalTimeTV, mTotalExercise);
     }
 
-    private void addPredictionToTodaysRV(Prediction prediction) {
+    private void addPredictionToTodayRV(Prediction prediction) {
         int itemCount = mFastAdapter.getAdapterItemCount();
 
         // Get the last item in the list if there is one
@@ -410,9 +409,9 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
                     mAuthManager.signOut();
                 return true;
 
-            // Handle exporting data
+            // Delegate the export and config to ExportActivity
             case R.id.action_export:
-                CSVUtils.exportToCSV(this);
+                this.startActivity(new Intent(this, ExportActivity.class));
                 return true;
 
             default:

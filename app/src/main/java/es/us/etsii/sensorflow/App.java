@@ -4,6 +4,7 @@ import android.app.Application;
 import javax.inject.Singleton;
 import dagger.Component;
 import es.us.etsii.sensorflow.utils.PrimaryKeyFactory;
+import es.us.etsii.sensorflow.views.ExportActivity;
 import es.us.etsii.sensorflow.views.MainActivity;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -21,6 +22,7 @@ public class App extends Application {
     public interface AppComponent {
         void inject(App application);
         void inject(MainActivity mainActivity);
+        void inject(ExportActivity exportActivity);
     }
 
     // ------------------------- CONSTRUCTOR -------------------------

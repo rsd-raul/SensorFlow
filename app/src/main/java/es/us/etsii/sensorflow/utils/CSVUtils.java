@@ -56,7 +56,7 @@ public abstract class CSVUtils {
 
         fileName += ".csv";
         String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
-        String filePath = baseDir + File.separator + Constants.CSV_FOLDER_NAME + File.separator + fileName;
+        String filePath = baseDir + File.separator + Constants.CSV_FOLDER_ROUTE + File.separator + fileName;
         File f = new File(filePath);
 
         // If file exists, append to it, if not, create a new one
