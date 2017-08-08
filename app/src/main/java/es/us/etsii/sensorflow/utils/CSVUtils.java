@@ -23,15 +23,6 @@ public abstract class CSVUtils {
 
     // -------------------------- USE CASES --------------------------
 
-    public static void exportToCSV(MainActivity activity) {
-        // Check if we have permissions to access external storage
-        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED)
-            return;
-
-        DialogUtils.exportDialog(activity);
-    }
-
     public static boolean exportAllToCSV(String fileName, boolean headers, RealmManager rm){
         return exportToCsv(fileName, rm.findAllSamples(), headers);
     }

@@ -6,13 +6,12 @@ import android.graphics.Color;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.format.DateUtils;
 import android.text.style.AbsoluteSizeSpan;
 import android.text.style.ForegroundColorSpan;
-
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-
 import es.us.etsii.sensorflow.R;
 
 public abstract class Utils {
@@ -89,5 +88,9 @@ public abstract class Utils {
         todayCal.set(Calendar.SECOND, 0);
         todayCal.set(Calendar.MILLISECOND, 0);
         return todayCal.getTimeInMillis();
+    }
+
+    public static String longToDateString(Context context, long date){
+        return DateUtils.formatDateTime(context, date, DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_TIME);
     }
 }

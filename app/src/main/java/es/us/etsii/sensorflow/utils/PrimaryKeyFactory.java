@@ -2,7 +2,6 @@ package es.us.etsii.sensorflow.utils;
 
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
-
 import io.realm.Realm;
 import io.realm.RealmModel;
 

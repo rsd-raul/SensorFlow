@@ -1,10 +1,15 @@
 package es.us.etsii.sensorflow.views;
 
+import android.Manifest;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
+import android.util.Log;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -12,8 +17,11 @@ import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 import com.afollestad.materialdialogs.folderselector.FolderChooserDialog;
+import com.appeaser.sublimepickerlibrary.datepicker.SelectedDate;
 import java.io.File;
+import java.util.Calendar;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -21,8 +29,10 @@ import es.us.etsii.sensorflow.App;
 import es.us.etsii.sensorflow.R;
 import es.us.etsii.sensorflow.utils.Constants;
 import es.us.etsii.sensorflow.utils.DialogUtils;
+import es.us.etsii.sensorflow.utils.Utils;
 
-public class ExportActivity extends BaseActivity implements FolderChooserDialog.FolderCallback {
+public class ExportActivity extends BaseActivity implements FolderChooserDialog.FolderCallback,
+                                                            SublimePickerFragment.SublimeCallback {
 
     // --------------------------- VALUES ----------------------------
 
@@ -42,6 +52,8 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
     @BindView(R.id.s_conflict_mode) Spinner mConflictModeSP;
     @BindView(R.id.saveFAB) FloatingActionButton mSaveFAB;
     private ArrayAdapter<String> mFolderContentAdapter;
+    private long mFromDate = 0, mToDate = 0, mMaxSamples = 0;
+    private final int ALL = 1, ALL_WITH_MAX = 2, FROM_DATE = 3, WITH_RANGE = 4, MALFORMED = 5;
 
     // ------------------------- CONSTRUCTOR -------------------------
 
@@ -58,6 +70,8 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
         setContentView(R.layout.activity_export);
         ButterKnife.bind(this);
 
+
+
         // Setup a simple list with the files at the default location
         setupFolderContent(false);
     }
@@ -73,15 +87,77 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
 
     @OnClick(R.id.tv_from_date)
     public void fromDatePicker(){
-
+        DialogUtils.buildDateTimePicker(Constants.FROM_PICKER, mFromDate, this);
     }
 
     @OnClick(R.id.tv_to_date)
     public void toDatePicker(){
+        DialogUtils.buildDateTimePicker(Constants.TO_PICKER, mToDate, this);
+    }
 
+    @OnClick(R.id.iv_remove_from_date)
+    public void fromDateRemove(){
+        mFromDate = 0;
+        mFromDateTV.setText(R.string.no_date_set);
+        mRemoveFromDateIV.setVisibility(View.GONE);
+    }
+    @OnClick(R.id.iv_remove_to_date)
+    public void toDateRemove(){
+        mToDate = 0;
+        mToDateTV.setText(R.string.no_date_set);
+        mRemoveToDateIV.setVisibility(View.GONE);
+    }
+
+    @OnClick(R.id.saveFAB)
+    public void exportToCSV(){
+        // Check if we have permissions to access external storage
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, R.string.permission_missing_sd_write, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        switch (classifyCSVExport()){
+            case ALL:
+                break;
+            case ALL_WITH_MAX:
+                break;
+            case FROM_DATE:
+                break;
+            case WITH_RANGE:
+                break;
+            case MALFORMED:
+                Toast.makeText(this, R.string.incorrect_settings, Toast.LENGTH_SHORT).show();
+                return;
+            default:
+                Log.e(TAG, "exportToCSV: Combination not supported: " + mFromDate + " " + mToDate +
+                        " " + mMaxSamplesET.getText().toString());
+                return;
+        }
+
+        // ....
+        Toast.makeText(this, "Export", Toast.LENGTH_SHORT).show();
     }
 
     // ------------------------- AUXILIARY ---------------------------
+
+    private int classifyCSVExport() {
+        mMaxSamples = Integer.parseInt(mMaxSamplesET.getText().toString());
+
+        if(mFromDate == 0)
+            if (mToDate == 0)
+                if (mMaxSamples > 0)
+                    return ALL_WITH_MAX;        // Only MaxSamples set
+                else
+                    return ALL;                 // Nothing set
+            else
+                return MALFORMED;               // ToDate without FromDate
+        else
+            if(mToDate == 0)
+                return FROM_DATE;               // Only FromDateSet
+            else
+                return WITH_RANGE;              // Both FromDate and ToDate set
+    }
 
     // -------------------------- INTERFACE --------------------------
 
@@ -89,6 +165,8 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
         // Get the folder path form preferences
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         String path = sharedPreferences.getString(Constants.CSV_FOLDER, Constants.CSV_FOLDER_ROUTE);
+
+        mFolderNameTV.setText(path);
 
         // Populate the adapter and setup the ListView
         if(!updateOnly)
@@ -119,9 +197,45 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
         sharedPreferences.edit().putString(Constants.CSV_FOLDER, folder.getAbsolutePath()).apply();
 
         // Setup UI
-        mFolderNameTV.setText(folder.getName());
         setupFolderContent(true);
     }
     @Override
     public void onFolderChooserDismissed(@NonNull FolderChooserDialog dialog) { }
+
+    /**
+     * Date and time picker callback
+     */
+    @Override
+    public void onDateTimeRecurrenceSet(SelectedDate selectedDate, int hourOfDay, int minute, int id) {
+        Calendar date = selectedDate.getFirstDate();
+        date.set(Calendar.HOUR_OF_DAY, hourOfDay);
+        date.set(Calendar.MINUTE, minute);
+
+        long dateLong = date.getTimeInMillis();
+        switch (id){
+            case Constants.FROM_PICKER:
+                mFromDate = dateLong;
+                mFromDateTV.setText(Utils.longToDateString(this, dateLong));
+                mRemoveFromDateIV.setVisibility(View.VISIBLE);
+                break;
+            case Constants.TO_PICKER:
+                mToDate = dateLong;
+                mToDateTV.setText(Utils.longToDateString(this, dateLong));
+                mRemoveToDateIV.setVisibility(View.VISIBLE);
+                break;
+        }
+
+        // Control the case when ToDate is before FromDate -> Change values
+        if(mFromDate > mToDate && mToDate != 0) {
+            long aux1 = mFromDate;
+            mFromDate = mToDate;
+            mToDate = aux1;
+
+            CharSequence aux2 = mFromDateTV.getText();
+            mFromDateTV.setText(mToDateTV.getText());
+            mToDateTV.setText(aux2);
+        }
+    }
+    @Override
+    public void onCancelled() { }
 }

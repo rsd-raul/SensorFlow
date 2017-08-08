@@ -81,5 +81,7 @@
     <string name="no_content">-</string>
     <string name="no_data">NO DATA</string>
     <string name="no_files_in_directory">No files in this directory</string>
+    <string name="permission_missing_sd_write">Permission missing: External Storage - Write</string>
+    <string name="incorrect_settings">Incorrect settings</string>
 
 </resources>

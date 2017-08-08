@@ -32,6 +32,11 @@ public abstract class Constants {
 
     public static final int GOOGLE_AUTH = 1;
     public static final String CSV_FOLDER = "key2";
+    public static final String SUBLIME_OPTIONS = "key3";
+    static final String SUBLIME_PICKER = "key4";
+    public static final int FROM_PICKER = 5;
+    public static final int TO_PICKER = 6;
+
     private static final int MS2US = 1000;
     private static final double MS2S = 0.001;
     public static final int UI_REFRESH_RATE_MS = 1000;
@@ -53,4 +58,6 @@ public abstract class Constants {
             R.string.sitting, R.string.standing, R.string.upstairs, R.string.walking};
     public static final int STAIRS_DOWN_INDEX = 0, RUNNING_INDEX = 1, SEATED_INDEX = 2,
             STANDING_INDEX = 3, STAIRS_UP_INDEX = 4, WALKING_INDEX = 5;
+
+
 }

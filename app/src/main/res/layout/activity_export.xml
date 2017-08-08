@@ -91,7 +91,8 @@
             app:layout_constraintTop_toTopOf="@+id/textView8"
             android:layout_marginStart="0dp"
             android:layout_marginEnd="32dp"
-            app:layout_constraintLeft_toLeftOf="@+id/tv_from_date" />
+            app:layout_constraintLeft_toLeftOf="@+id/tv_from_date"
+            android:ellipsize="start"/>
 
         <TextView
             android:id="@+id/textView8"
@@ -168,7 +169,7 @@
             android:background="@android:color/transparent"
             android:ems="10"
             android:hint="@string/max_samples_hint"
-            android:inputType="textPersonName|number"
+            android:inputType="number"
             android:text="40000"
             android:textAppearance="@style/TextAppearance.AppCompat.Menu"
             app:layout_constraintBottom_toBottomOf="@+id/textView6"
@@ -202,14 +203,15 @@
             android:id="@+id/iv_remove_from_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="0dp"
+            android:layout_marginStart="8dp"
             android:layout_marginBottom="0dp"
             android:layout_marginTop="0dp"
             android:contentDescription="@string/remove_date_cont_desc"
             app:srcCompat="@drawable/ic_close_24dp"
-            app:layout_constraintLeft_toLeftOf="@+id/iv_remove_to_date"
             app:layout_constraintTop_toTopOf="@+id/tv_from_date"
-            app:layout_constraintBottom_toBottomOf="@+id/tv_from_date" />
+            app:layout_constraintBottom_toBottomOf="@+id/tv_from_date"
+            app:layout_constraintLeft_toRightOf="@+id/tv_from_date"
+            android:visibility="gone" />
 
         <ImageView
             android:id="@+id/iv_remove_to_date"
@@ -218,9 +220,10 @@
             android:layout_marginStart="8dp"
             android:contentDescription="@string/remove_date_cont_desc"
             app:layout_constraintBottom_toBottomOf="@+id/tv_to_date"
-            app:layout_constraintLeft_toRightOf="@+id/tv_from_date"
+            app:layout_constraintLeft_toRightOf="@+id/tv_to_date"
             app:layout_constraintTop_toTopOf="@+id/tv_to_date"
-            app:srcCompat="@drawable/ic_close_24dp" />
+            app:srcCompat="@drawable/ic_close_24dp"
+            android:visibility="gone" />
 
         <Spinner
             android:id="@+id/s_conflict_mode"
@@ -240,7 +243,7 @@
         <ListView
             android:id="@+id/lv_folder_content"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_marginBottom="16dp"
             android:layout_marginEnd="32dp"
             android:layout_marginStart="8dp"
