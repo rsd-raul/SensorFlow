@@ -43,7 +43,7 @@ public abstract class Utils {
             items.add(adjustMin + String.valueOf(minutes));
             items.add(context.getString(R.string.minute_unit));
         }
-        if(seconds > 0){
+        if(seconds > 0 || (minutes == 0 && hours == 0)){
             items.add(adjustSec + String.valueOf(seconds));
             items.add(context.getString(R.string.second_unit));
         }

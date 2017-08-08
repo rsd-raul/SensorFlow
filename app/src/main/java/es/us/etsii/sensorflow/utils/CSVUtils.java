@@ -1,10 +1,6 @@
 package es.us.etsii.sensorflow.utils;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.support.v4.app.ActivityCompat;
 import android.util.Log;
-
 import com.opencsv.CSVWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -12,7 +8,6 @@ import java.io.IOException;
 import es.us.etsii.sensorflow.domain.Sample;
 import es.us.etsii.sensorflow.managers.AuthManager;
 import es.us.etsii.sensorflow.managers.RealmManager;
-import es.us.etsii.sensorflow.views.MainActivity;
 import io.realm.RealmResults;
 
 public abstract class CSVUtils {

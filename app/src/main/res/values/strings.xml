@@ -17,13 +17,17 @@
     <string name="upstairs">Upstairs</string>
     <string name="walking">Walking</string>
 
-    <string name="x">X</string>
-    <string name="y">Y</string>
-    <string name="z">Z</string>
+    <string name="x" translatable="false">X</string>
+    <string name="y" translatable="false">Y</string>
+    <string name="z" translatable="false">Z</string>
 
     <string name="hour_unit">H</string>
     <string name="minute_unit">M</string>
     <string name="second_unit">S</string>
+
+    <string name="csv" translatable="false">.csv</string>
+    <string name="zero" translatable="false">0</string>
+    <string name="no_content" translatable="false">-</string>
 
     <!-- Sensors -->
 
@@ -52,7 +56,7 @@
     <string name="name">Name</string>
     <string name="folder">Folder</string>
     <string name="conflict">Conflict</string>
-    <string-array name="conflict_types">
+    <string-array name="conflict_types">        <!-- Indexes stored at Constants -->
         <item>WARN</item>
         <item>APPEND</item>
         <item>OVERRIDE</item>
@@ -78,10 +82,14 @@
 
     <string name="close_app">Close application</string>
     <string name="samples">Samples</string>
-    <string name="no_content">-</string>
     <string name="no_data">NO DATA</string>
     <string name="no_files_in_directory">No files in this directory</string>
     <string name="permission_missing_sd_write">Permission missing: External Storage - Write</string>
     <string name="incorrect_settings">Incorrect settings</string>
+    <string name="append">Append</string>
+    <string name="override">Override</string>
+    <string name="file_name_conflict_desc">The file being saved shares name with a previously created one. Do you wish to override it, to append the new data to the file, or to cancel</string>
+    <string name="file_name_conflict">File names conflict</string>
+    <string name="file_name_without_extension">File name without extension</string>
 
 </resources>

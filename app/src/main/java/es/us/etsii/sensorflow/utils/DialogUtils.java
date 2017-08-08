@@ -111,4 +111,18 @@ public abstract class DialogUtils {
         pickerFrag.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
         pickerFrag.show(activity.getSupportFragmentManager(), Constants.SUBLIME_PICKER);
     }
+
+    // TODO Test warning dialog and behaviour
+    public static void waringDialog(ExportActivity activity) {
+        new MaterialDialog.Builder(activity)
+                .title(R.string.file_name_conflict)
+                .content(R.string.file_name_conflict_desc)
+                .positiveText(R.string.override)
+                .onPositive(activity)
+                .neutralText(R.string.append)
+                .onNeutral(activity)
+                .negativeText(R.string.cancel)
+                .onNegative(activity)
+                .show();
+    }
 }
