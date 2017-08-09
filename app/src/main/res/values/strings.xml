@@ -32,7 +32,6 @@
     <!-- Sensors -->
 
     <string name="sensors">Sensors</string>
-
     <string name="accelerometer">Accelerometer</string>
     <string name="barometer">Barometer</string>
     <string name="magnetometer">Magnetometer</string>
@@ -68,7 +67,7 @@
     <string name="to">To</string>
     <string name="no_date_set">No date set</string>
     <string name="remove_date_cont_desc">Remove date</string>
-    <string name="max_samples_hint">0 for all samples</string>
+    <string name="max_samples_hint">Nothing for all samples</string>
 
     <string name="at_folder">At folder</string>
 
@@ -90,6 +89,10 @@
     <string name="override">Override</string>
     <string name="file_name_conflict_desc">The file being saved shares name with a previously created one. Do you wish to override it, to append the new data to the file, or to cancel</string>
     <string name="file_name_conflict">File names conflict</string>
-    <string name="file_name_without_extension">File name without extension</string>
+    <string name="file_name_without_extension">File name w/o extension</string>
+    <string name="problems_storing_samples">Problems storing the Samples in the folder</string>
+    <string name="problems_no_samples_found">No samples found with this conditions</string>
+    <string name="samples_stored">Samples stored in the folder</string>
+    <string name="max_samples">Samples maximum</string>
 
 </resources>

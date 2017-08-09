@@ -2,6 +2,7 @@ package es.us.etsii.sensorflow.views;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
@@ -10,8 +11,8 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
-import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -90,6 +91,7 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
 
     // -------------------------- USE CASES --------------------------
 
+    @SuppressWarnings("ResourceType")
     @OnClick(R.id.saveFAB)
     public void checkAndExportCSV(){
         // Check if we have permissions to access external storage
@@ -100,24 +102,33 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
         }
 
         mFileName = mFileNameET.getText().toString();
-        CSVUtils.sConflictIndex = mConflictModeSP.getSelectedItemPosition();
-        if(mFilesInFolder.contains(mFileName) && CSVUtils.sConflictIndex == Constants.WARN)
+        exportConfig.setConflictIndex(mConflictModeSP.getSelectedItemPosition());   // ResType ignore
+        if(mFilesInFolder.contains(mFileName) && exportConfig.getConflictIndex() == Constants.WARN)
             DialogUtils.waringDialog(this);
         else
             exportToCSV();
     }
 
+    /**
+     * Complete the info required to by the CSV export task and call it
+     */
     public void exportToCSV() {
-        // Complete the info required for the export exportConfig
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         String folderPath = sharedPreferences.getString(Constants.CSV_FOLDER, Constants.CSV_FOLDER_ROUTE);
         String fullFilePath = folderPath + File.separator + mFileName + ".csv";
-        int maxSamples = Integer.parseInt(mMaxSamplesET.getText().toString());
-
         exportConfig.setFullFilePath(fullFilePath);
-        exportConfig.setMaxSamples(maxSamples);
 
-        new CSVExportTask().execute();
+        String maxSamplesStr = mMaxSamplesET.getText().toString();
+        try {
+            int maxSamples = maxSamplesStr.length() > 0 ? Integer.parseInt(maxSamplesStr) : 0;
+            exportConfig.setMaxSamples(maxSamples);
+            new CSVExportTask().execute();
+        }catch (Exception ex){
+            Toast.makeText(this, Integer.MAX_VALUE + " " + getString(R.string.max_samples),
+                                                                        Toast.LENGTH_SHORT).show();
+        }
+        // Hide the keyboard in case it's showing
+        hideKeyboard();
     }
 
     @OnClick(R.id.tv_folder_name)
@@ -134,6 +145,10 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
     public void toDatePicker(){
         DialogUtils.buildDateTimePicker(Constants.TO_PICKER, exportConfig.getToDate(), this);
     }
+
+    // ------------------------- AUXILIARY ---------------------------
+
+    // -------------------------- INTERFACE --------------------------
 
     @OnClick(R.id.iv_remove_from_date)
     public void fromDateRemove(){
@@ -156,11 +171,6 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
         mFileNameET.setText(Constants.CSV_FILE_PREFIX + System.currentTimeMillis());
     }
 
-    // ------------------------- AUXILIARY ---------------------------
-
-
-    // -------------------------- INTERFACE --------------------------
-
     private void setupFolderContent() {
         // Get the folder path form preferences and update the UI field
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -178,6 +188,16 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
 
         mFolderContentLV.setAdapter(
                 new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, mFilesInFolder));
+    }
+
+    private void hideKeyboard() {
+        // Check if no view has focus:
+        View view = this.getCurrentFocus();
+        if (view == null)
+            return;
+
+        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
     // -------------------------- LISTENER ---------------------------
@@ -257,12 +277,7 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
         }
     }
 
-    private class CSVExportTask extends AsyncTask<Void, Void, String> {
-
-        // --------------------------- VALUES ----------------------------
-
-        private static final String TAG = "CSVExportTask";
-        private final int ALL = 1, FROM_DATE = 2, WITH_RANGE = 3, MALFORMED = 4;
+    private class CSVExportTask extends AsyncTask<Void, Void, Integer> {
 
         // ------------------------- CONSTRUCTOR -------------------------
 
@@ -271,53 +286,24 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
         // -------------------------- USE CASES --------------------------
 
         @Override
-        protected String doInBackground(Void... voids) {
-
-            switch (classifyCSVExport(exportConfig)){
-                case ALL:
-                    CSVUtils.exportAllToCSV(exportConfig, mRealmManagerLazy.get());
-                    break;
-                case FROM_DATE:
-                    CSVUtils.exportFromDateToCSV(exportConfig, mRealmManagerLazy.get());
-                    break;
-                case WITH_RANGE:
-                    CSVUtils.exportWithTimeFrameToCSV(exportConfig, mRealmManagerLazy.get());
-                    break;
-                case MALFORMED:
-                default:
-                    return "exportToCSV: Combination not supported: " + exportConfig.getFromDate() +
-                            " " + exportConfig.getToDate() + " " + exportConfig.getMaxSamples();
-            }
-            return null;
+        protected Integer doInBackground(Void... voids) {
+            return CSVUtils.exportToCSV(exportConfig, mRealmManagerLazy.get());
         }
 
         @Override
-        protected void onPostExecute(String log) {
-            super.onPostExecute(log);
+        protected void onPostExecute(Integer logRes) {
+            super.onPostExecute(logRes);
 
-            if(log == null){
+            if(logRes == R.string.samples_stored){
                 ExportActivity.this.setupFolderContent();
                 ExportActivity.this.refreshName();
-                return;
             }
 
-            Toast.makeText(ExportActivity.this, R.string.incorrect_settings, Toast.LENGTH_SHORT).show();
-            Log.e(TAG, log);
+            Toast.makeText(ExportActivity.this, logRes, Toast.LENGTH_SHORT).show();
         }
 
         // ------------------------- AUXILIARY ---------------------------
 
-        private int classifyCSVExport(Config config) {
-            if(config.getFromDate() == 0)
-                if (config.getToDate() == 0)
-                    return ALL;                     // Nothing set
-                else
-                    return MALFORMED;               // ToDate without FromDate
-            else
-                if(config.getToDate() == 0)
-                    return FROM_DATE;               // Only FromDateSet
-                else
-                    return WITH_RANGE;              // Both FromDate and ToDate set
-        }
+
     }
 }

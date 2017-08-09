@@ -16,6 +16,15 @@ public class Event {
 
     public Event() { }
 
+    public Event(int type, double latitude, double longitude, double altitude, float accuracy, long timestamp) {
+        this.type = type;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.altitude = altitude;
+        this.accuracy = accuracy;
+        this.timestamp = timestamp;
+    }
+
     // ---------------------- GETTERS & SETTERS ----------------------
 
     public int getType() {

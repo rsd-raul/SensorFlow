@@ -1,6 +1,5 @@
 package es.us.etsii.sensorflow.utils;
 
-import android.content.Context;
 import android.util.Log;
 import com.opencsv.CSVWriter;
 import java.io.File;
@@ -8,10 +7,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
+import es.us.etsii.sensorflow.R;
 import es.us.etsii.sensorflow.domain.Config;
 import es.us.etsii.sensorflow.domain.Sample;
 import es.us.etsii.sensorflow.managers.AuthManager;
 import es.us.etsii.sensorflow.managers.RealmManager;
+import io.realm.RealmResults;
 
 public abstract class CSVUtils {
 
@@ -19,34 +20,63 @@ public abstract class CSVUtils {
 
     private static final String TAG = "CSVUtils";
 
-    public static int sConflictIndex = Constants.WARN;
-
     // -------------------------- USE CASES --------------------------
 
-    public static boolean exportAllToCSV(Config config, RealmManager rm){
+    public static Integer exportToCSV(Config exportConfig, RealmManager realmManager) {
+        Boolean response;
+
+        switch (classifyCSVExport(exportConfig)){
+            case Constants.ALL:
+                response = CSVUtils.exportAllToCSV(exportConfig, realmManager);
+                break;
+            case Constants.FROM_DATE:
+                response = CSVUtils.exportFromDateToCSV(exportConfig, realmManager);
+                break;
+            case Constants.WITH_RANGE:
+                response = CSVUtils.exportWithTimeFrameToCSV(exportConfig, realmManager);
+                break;
+            case Constants.MALFORMED:
+            default:
+                return R.string.incorrect_settings;
+        }
+
+        if(response == null)
+            return R.string.problems_no_samples_found;
+        else if (!response)
+            return R.string.problems_storing_samples;
+        else
+            return R.string.samples_stored;
+    }
+
+    private static Boolean exportAllToCSV(Config config, RealmManager rm){
         // Get all samples and return only the number of samples requested
         List<Sample> samples = rm.findAllSamples();
         if(config.getMaxSamples() > 0)
-            samples = samples.subList(0, config.getMaxSamples()-1);
+            samples = samples.subList(0, Math.min(config.getMaxSamples(), samples.size()));
 
         return exportToCsv(config.getFullFilePath(), samples);
     }
 
-    public static boolean exportWithTimeFrameToCSV(Config config, RealmManager rm){
-        return exportToCsv(config.getFullFilePath(),
-                rm.findSamplesWithTimeFrame(config.getFromDate(), config.getToDate()));
+    private static Boolean exportWithTimeFrameToCSV(Config config, RealmManager rm){
+        RealmResults<Sample> samples = rm.findSamplesWithTimeFrame(config.getFromDate(),
+                                                                                config.getToDate());
+        return exportToCsv(config.getFullFilePath(), samples);
     }
 
-    public static boolean exportFromDateToCSV(Config config, RealmManager rm){
+    private static Boolean exportFromDateToCSV(Config config, RealmManager rm){
         // Filter by date and return only the number of samples requested
         List<Sample> samples = rm.findSamplesFromDate(config.getFromDate());
         if(config.getMaxSamples() > 0)
-            samples = samples.subList(0, config.getMaxSamples()-1);
+            samples = samples.subList(0, Math.min(config.getMaxSamples(), samples.size()));
 
         return exportToCsv(config.getFullFilePath(), samples);
     }
 
-    private static boolean exportToCsv(String fullFilePath, List<Sample> samples){
+    private static Boolean exportToCsv(String fullFilePath, List<Sample> samples){
+        // If we have an empty list, send null so we inform the user
+        if(samples.size()==0)
+            return null;
+
         FileWriter fileWriter;
         CSVWriter csvWriter;
 
@@ -97,5 +127,20 @@ public abstract class CSVUtils {
             Log.e(TAG, "exportToCsv: Problem closing the writers", ex);
             return false;
         }
+    }
+
+    // ------------------------- AUXILIARY ---------------------------
+
+    @Constants.ExportMode private static int classifyCSVExport(Config config) {
+        if(config.getFromDate() == 0)
+            if (config.getToDate() == 0)
+                return Constants.ALL;                     // Nothing set
+            else
+                return Constants.MALFORMED;               // ToDate without FromDate
+        else
+        if(config.getToDate() == 0)
+            return Constants.FROM_DATE;               // Only FromDateSet
+        else
+            return Constants.WITH_RANGE;              // Both FromDate and ToDate set
     }
 }

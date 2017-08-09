@@ -219,13 +219,9 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
                         if (location == null)
                             return;
 
-                        Event event = new Event();
-                        event.setType(eventIndex);
-                        event.setTimestamp(System.currentTimeMillis());
-                        event.setLatitude(location.getLatitude());
-                        event.setLongitude(location.getLongitude());
-                        event.setAltitude(location.getAltitude());
-                        event.setAccuracy(location.getAccuracy());
+                        Event event = new Event(eventIndex, location.getLatitude(),
+                                location.getLongitude(), location.getAltitude(),
+                                location.getAccuracy(), System.currentTimeMillis());
                         FirebaseManager.createEvent(event);
                     }
                 });

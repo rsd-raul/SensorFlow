@@ -1,7 +1,12 @@
 package es.us.etsii.sensorflow.utils;
 
 import android.os.Environment;
+import android.support.annotation.IntDef;
+
 import java.io.File;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 import es.us.etsii.sensorflow.R;
 
 public abstract class Constants {
@@ -27,6 +32,11 @@ public abstract class Constants {
     static final String COLUMN_ACCELEROMETER_Y = "acce-y";
     static final String COLUMN_ACCELEROMETER_Z = "acce-z";
 
+    public static final int ALL = 1, FROM_DATE = 2, WITH_RANGE = 3, MALFORMED = 4;
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({ALL, FROM_DATE, WITH_RANGE, MALFORMED})
+    public @interface ExportMode{}
+
     // Constants:
 
     public static final int GOOGLE_AUTH = 1;
@@ -34,7 +44,11 @@ public abstract class Constants {
     public static final String SUBLIME_OPTIONS = "key3";
     static final String SUBLIME_PICKER = "key4";
     public static final int FROM_PICKER = 5, TO_PICKER = 6;
+
     public static final int WARN = 7, APPEND = 8, OVERRIDE = 9;
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({WARN, APPEND, OVERRIDE})
+    public @interface ConflictMode{}
 
     private static final int MS2US = 1000;
     private static final double MS2S = 0.001;
