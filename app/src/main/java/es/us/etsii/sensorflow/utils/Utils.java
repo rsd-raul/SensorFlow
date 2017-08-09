@@ -22,7 +22,7 @@ public abstract class Utils {
      * @param totalSeconds The number of seconds to convert and format
      * @return Formatted CharSequence with custom sizes, colors and content
      */
-    public static CharSequence getCustomHHmmssString(Context context, double totalSeconds){
+    public static CharSequence getCustomTime(Context context, double totalSeconds){
 
         // Convert totalSeconds to hours:minutes:seconds            //22304s
         int totalMinutes = (int) Math.floor(totalSeconds/60);

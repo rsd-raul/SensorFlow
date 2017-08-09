@@ -1,6 +1,7 @@
 package es.us.etsii.sensorflow.managers;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 import es.us.etsii.sensorflow.domain.Prediction;
 import es.us.etsii.sensorflow.domain.Sample;
@@ -19,35 +20,35 @@ public class RealmManager {
 
     // ------------------------- ATTRIBUTES --------------------------
 
-    private Realm mRealm;
+    private Provider<Realm> mRealmProvider;
 
     // ------------------------- CONSTRUCTOR -------------------------
 
     @Inject
-    RealmManager(Realm mRealm) {
-        this.mRealm = mRealm;
+    RealmManager(Provider<Realm> mRealmProvider) {
+        this.mRealmProvider = mRealmProvider;
     }
 
     // ---------------------------- FIND -----------------------------
 
     private RealmResults<Prediction> findAllPredictions(){
-        return mRealm.where(Prediction.class).findAll();
+        return mRealmProvider.get().where(Prediction.class).findAll();
     }
 
     public RealmResults<Prediction> findPredictionsFromDate(long fromDate){
-        return mRealm.where(Prediction.class).greaterThanOrEqualTo("timestamp", fromDate).findAll();
+        return mRealmProvider.get().where(Prediction.class).greaterThanOrEqualTo("timestamp", fromDate).findAll();
     }
 
     public RealmResults<Sample> findAllSamples(){
-        return mRealm.where(Sample.class).findAll();
+        return mRealmProvider.get().where(Sample.class).findAll();
     }
 
     public RealmResults<Sample> findSamplesFromDate(long fromDate){
-        return mRealm.where(Sample.class).greaterThanOrEqualTo("timestamp", fromDate).findAll();
+        return mRealmProvider.get().where(Sample.class).greaterThanOrEqualTo("timestamp", fromDate).findAll();
     }
 
-    public RealmResults<Sample> findSamplesWithTimeframe(long fromDate, long toDate){
-        return mRealm.where(Sample.class).between("timestamp", fromDate, toDate).findAll();
+    public RealmResults<Sample> findSamplesWithTimeFrame(long fromDate, long toDate){
+        return mRealmProvider.get().where(Sample.class).between("timestamp", fromDate, toDate).findAll();
     }
 
     // ---------------------------- SAVE -----------------------------
@@ -59,10 +60,10 @@ public class RealmManager {
      */
     public void storePrediction(final Prediction prediction){
         // FIXME Ideally async -> IllegalStateException currently
-        mRealm.executeTransaction(new Realm.Transaction() {
+        mRealmProvider.get().executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                mRealm.copyToRealmOrUpdate(prediction);
+                mRealmProvider.get().copyToRealmOrUpdate(prediction);
 
                 // TODO - Testing only - Remove before delivery
 //                Log.e(TAG, "storePrediction: findAllSamples: " + findAllSamples().size());
@@ -93,13 +94,5 @@ public class RealmManager {
                 .equalTo("type", Constants.WALKING_INDEX).or()
                 .equalTo("type", Constants.STAIRS_DOWN_INDEX).or()
                 .equalTo("type", Constants.STAIRS_UP_INDEX);
-    }
-
-    public void openRealm(){
-        mRealm = Realm.getDefaultInstance();
-    }
-
-    public void closeRealm() {
-        mRealm.close();
     }
 }

@@ -4,12 +4,10 @@ import android.app.Application;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
-
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
 import com.mikepenz.fastadapter.commons.adapters.FastItemAdapter;
-
 import javax.inject.Singleton;
 import dagger.Module;
 import dagger.Provides;

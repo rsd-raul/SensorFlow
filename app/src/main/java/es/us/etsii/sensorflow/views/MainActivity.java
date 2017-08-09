@@ -65,11 +65,11 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     @BindViews({R.id.tv_ace_x, R.id.tv_ace_y, R.id.tv_ace_z}) List<TextView> mSensorsInfoTVs;
     @BindView(R.id.tv_today_time) TextView mTodayTimeTV;
     @BindView(R.id.tv_total_time) TextView mTotalTimeTV;
-    @BindView(R.id.rv_todays_activities) RecyclerView mTodaysActivitiesRV;
+    @BindView(R.id.rv_todays_activities) RecyclerView mTodayActivitiesRV;
     @BindView(R.id.s_scroll) Switch mScrollS;
     @Inject AuthManager mAuthManager;
     @Inject Lazy<SensorManager> mSensorManager;
-    @Inject Lazy<RealmManager> mRealmManager;
+    @Inject Lazy<RealmManager> mRealmManagerLazy;
     @Inject Lazy<Sensor[]> mCriticalSensors;
     @Inject Lazy<TensorFlowClassifier> mClassifier;
     @Inject Lazy<FusedLocationProviderClient> mFusedLocationClient;
@@ -96,14 +96,15 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         ButterKnife.bind(this);
 
         // Setup Today's recycler view using the DB
-        mTodaysActivitiesRV.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        mTodaysActivitiesRV.setAdapter(mFastAdapter);
-        for (Prediction prediction : mRealmManager.get().findPredictionsFromDate(Utils.getDayStart()))
+        mTodayActivitiesRV.setLayoutManager(
+                new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        mTodayActivitiesRV.setAdapter(mFastAdapter);
+        for (Prediction prediction : mRealmManagerLazy.get().findPredictionsFromDate(Utils.getDayStart()))
             addPredictionToTodayRV(prediction);
 
         // Calculate total and today's active time using the DB
-        mTodayExercise = mRealmManager.get().calculateActiveSecondsToday();
-        mTotalExercise = mRealmManager.get().calculateActiveSecondsTotal();
+        mTodayExercise = mRealmManagerLazy.get().calculateActiveSecondsToday();
+        mTotalExercise = mRealmManagerLazy.get().calculateActiveSecondsTotal();
         setCustomHHmmss(mTodayTimeTV, mTodayExercise);
         setCustomHHmmss(mTotalTimeTV, mTotalExercise);
     }
@@ -151,7 +152,6 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
             col = R.color.redDark;
 
             // Start service and UI updater
-            mRealmManager.get().openRealm();
             registerSensorListener();
             updateSensorValuesUI();
 
@@ -161,7 +161,6 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
             // Stop service
             mSensorManager.get().unregisterListener(this);
-            mRealmManager.get().closeRealm();
         }
 
         // Change colors and function
@@ -190,7 +189,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         }
 
         mPrediction.complete(index, System.currentTimeMillis());
-        mRealmManager.get().storePrediction(mPrediction);
+        mRealmManagerLazy.get().storePrediction(mPrediction);
 
 
         // Add the prediction to the list or modify it's values
@@ -258,7 +257,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
     public boolean isUserActive(int eventIndex) {
         return eventIndex == Constants.RUNNING_INDEX || eventIndex == Constants.WALKING_INDEX ||
-                eventIndex == Constants.STAIRS_UP_INDEX || eventIndex == Constants.STAIRS_DOWN_INDEX;
+               eventIndex == Constants.STAIRS_UP_INDEX || eventIndex == Constants.STAIRS_DOWN_INDEX;
     }
 
     private void registerSensorListener() {
@@ -338,18 +337,19 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         // If the last item exists and is the same time as the new prediction, modify the value
         if(lastItem != null && lastItem.getPredictionType() == prediction.getType()) {
             double newTotalTime = lastItem.getTotalTime() + Constants.S_ELAPSED_PER_SAMPLE;
-            lastItem.addToTotalTime(Utils.getCustomHHmmssString(this, newTotalTime));
+            lastItem.addToTotalTime(Utils.getCustomTime(this, newTotalTime));
             mFastAdapter.notifyAdapterItemChanged(itemCount-1);
         } else {
-            CharSequence totalTime = Utils.getCustomHHmmssString(this, Constants.S_ELAPSED_PER_SAMPLE);
-            mFastAdapter.add(mPredictionItemProvider.get().withPrediction(prediction.getType(), totalTime));
+            CharSequence totalTime = Utils.getCustomTime(this, Constants.S_ELAPSED_PER_SAMPLE);
+            mFastAdapter.add(mPredictionItemProvider.get()
+                    .withPrediction(prediction.getType(), totalTime));
         }
         if(mScrollS.isChecked())
-            mTodaysActivitiesRV.smoothScrollToPosition(itemCount);
+            mTodayActivitiesRV.smoothScrollToPosition(itemCount);
     }
 
     private void setCustomHHmmss(TextView tv, double timeMs){
-        tv.setText(Utils.getCustomHHmmssString(this, (int) Math.floor(timeMs)));
+        tv.setText(Utils.getCustomTime(this, (int) Math.floor(timeMs)));
     }
 
     // -------------------------- LISTENER ---------------------------

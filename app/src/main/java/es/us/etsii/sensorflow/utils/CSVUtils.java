@@ -1,14 +1,17 @@
 package es.us.etsii.sensorflow.utils;
 
+import android.content.Context;
 import android.util.Log;
 import com.opencsv.CSVWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
+
+import es.us.etsii.sensorflow.domain.Config;
 import es.us.etsii.sensorflow.domain.Sample;
 import es.us.etsii.sensorflow.managers.AuthManager;
 import es.us.etsii.sensorflow.managers.RealmManager;
-import io.realm.RealmResults;
 
 public abstract class CSVUtils {
 
@@ -16,38 +19,45 @@ public abstract class CSVUtils {
 
     private static final String TAG = "CSVUtils";
 
+    public static int sConflictIndex = Constants.WARN;
+
     // -------------------------- USE CASES --------------------------
 
-    public static boolean exportAllToCSV(String fileName, boolean headers, RealmManager rm){
-        return exportToCsv(fileName, rm.findAllSamples(), headers);
+    public static boolean exportAllToCSV(Config config, RealmManager rm){
+        // Get all samples and return only the number of samples requested
+        List<Sample> samples = rm.findAllSamples();
+        if(config.getMaxSamples() > 0)
+            samples = samples.subList(0, config.getMaxSamples()-1);
+
+        return exportToCsv(config.getFullFilePath(), samples);
     }
 
-    public static boolean exportWithTimeframeToCSV(String fileName, boolean headers, long fromDate, long toDate, RealmManager rm){
-        return exportToCsv(fileName, rm.findSamplesWithTimeframe(fromDate, toDate), headers);
+    public static boolean exportWithTimeFrameToCSV(Config config, RealmManager rm){
+        return exportToCsv(config.getFullFilePath(),
+                rm.findSamplesWithTimeFrame(config.getFromDate(), config.getToDate()));
     }
 
-    public static boolean exportFromDateToCSV(String fileName, boolean headers, long fromDate, int optionalMaxSamples, RealmManager rm){
-
+    public static boolean exportFromDateToCSV(Config config, RealmManager rm){
         // Filter by date and return only the number of samples requested
-        RealmResults<Sample> samples = rm.findSamplesFromDate(fromDate);
-        if(optionalMaxSamples > 0)
-            samples.subList(0, optionalMaxSamples-1);
+        List<Sample> samples = rm.findSamplesFromDate(config.getFromDate());
+        if(config.getMaxSamples() > 0)
+            samples = samples.subList(0, config.getMaxSamples()-1);
 
-        return exportToCsv(fileName, samples, headers);
+        return exportToCsv(config.getFullFilePath(), samples);
     }
 
-    private static boolean exportToCsv(String fileName, RealmResults<Sample> samples, boolean headers){
+    private static boolean exportToCsv(String fullFilePath, List<Sample> samples){
         FileWriter fileWriter;
         CSVWriter csvWriter;
 
-        fileName += ".csv";
-        String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
-        String filePath = baseDir + File.separator + Constants.CSV_FOLDER_ROUTE + File.separator + fileName;
-        File f = new File(filePath);
+        // FIXME DO SOMETHING BASED ON THE CONFLICT
+        // sConflictIndex;
+
+        File f = new File(fullFilePath);
 
         // If file exists, append to it, if not, create a new one
         try {
-            fileWriter = f.exists() && !f.isDirectory() ? new FileWriter(filePath, true) : new FileWriter(filePath);
+            fileWriter = f.exists() && !f.isDirectory() ? new FileWriter(fullFilePath, true) : new FileWriter(fullFilePath);
         } catch (IOException ex){
             Log.e(TAG, "exportToCsv: Problem creating the file writer", ex);
             return false;
@@ -55,7 +65,7 @@ public abstract class CSVUtils {
         csvWriter = new CSVWriter(fileWriter, Constants.CSV_SEPARATOR);
 
         // Write headers if requested
-        if(headers){
+        if(Constants.HEADERS_CSV){
             String[] data = {
                     Constants.COLUMN_USER,
                     Constants.COLUMN_TIMESTAMP,

@@ -1,9 +1,7 @@
 package es.us.etsii.sensorflow.utils;
 
 import android.os.Environment;
-
 import java.io.File;
-
 import es.us.etsii.sensorflow.R;
 
 public abstract class Constants {
@@ -22,6 +20,7 @@ public abstract class Constants {
 
     // CSVUtils Export
 
+    static final boolean HEADERS_CSV = true;
     static final String COLUMN_USER = "user-id";
     static final String COLUMN_TIMESTAMP = "timestamp";
     static final String COLUMN_ACCELEROMETER_X = "acce-x";

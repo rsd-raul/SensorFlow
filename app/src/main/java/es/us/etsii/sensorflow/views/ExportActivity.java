@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -26,11 +27,16 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import javax.inject.Inject;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import dagger.Lazy;
 import es.us.etsii.sensorflow.App;
 import es.us.etsii.sensorflow.R;
+import es.us.etsii.sensorflow.domain.Config;
+import es.us.etsii.sensorflow.managers.RealmManager;
+import es.us.etsii.sensorflow.utils.CSVUtils;
 import es.us.etsii.sensorflow.utils.Constants;
 import es.us.etsii.sensorflow.utils.DialogUtils;
 import es.us.etsii.sensorflow.utils.Utils;
@@ -55,10 +61,10 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
     @BindView(R.id.iv_remove_from_date) ImageView mRemoveFromDateIV;
     @BindView(R.id.s_conflict_mode) Spinner mConflictModeSP;
     @BindView(R.id.saveFAB) FloatingActionButton mSaveFAB;
-    private ArrayAdapter<String> mFolderContentAdapter;
-    private long mFromDate = 0, mToDate = 0, mMaxSamples = 0;
-    private final int ALL = 1, ALL_WITH_MAX = 2, FROM_DATE = 3, WITH_RANGE = 4, MALFORMED = 5;
-    private List<String> mFiles = new ArrayList<>();
+    @Inject Lazy<RealmManager> mRealmManagerLazy;
+    private String mFileName = null;
+    private List<String> mFilesInFolder;
+    private Config exportConfig = new Config();
 
     // ------------------------- CONSTRUCTOR -------------------------
 
@@ -77,7 +83,7 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
         refreshName();
 
         // Setup a simple list with the files at the default location
-        setupFolderContent(false);
+        setupFolderContent();
     }
 
     // --------------------------- STATES ----------------------------
@@ -93,33 +99,25 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
             return;
         }
 
-        switch (classifyCSVExport()){
-            case ALL:
-                break;
-            case ALL_WITH_MAX:
-                break;
-            case FROM_DATE:
-                break;
-            case WITH_RANGE:
-                break;
-            case MALFORMED:
-                Toast.makeText(this, R.string.incorrect_settings, Toast.LENGTH_SHORT).show();
-                return;
-            default:
-                Log.e(TAG, "exportToCSV: Combination not supported: " + mFromDate + " " + mToDate +
-                        " " + mMaxSamplesET.getText().toString());
-                return;
-        }
-
-        String fileName = mFileNameET.getText().toString();
-        if(mFiles.contains(fileName) && mConflictModeSP.getSelectedItemPosition() == Constants.WARN)
+        mFileName = mFileNameET.getText().toString();
+        CSVUtils.sConflictIndex = mConflictModeSP.getSelectedItemPosition();
+        if(mFilesInFolder.contains(mFileName) && CSVUtils.sConflictIndex == Constants.WARN)
             DialogUtils.waringDialog(this);
         else
             exportToCSV();
     }
 
     public void exportToCSV() {
-        //
+        // Complete the info required for the export exportConfig
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String folderPath = sharedPreferences.getString(Constants.CSV_FOLDER, Constants.CSV_FOLDER_ROUTE);
+        String fullFilePath = folderPath + File.separator + mFileName + ".csv";
+        int maxSamples = Integer.parseInt(mMaxSamplesET.getText().toString());
+
+        exportConfig.setFullFilePath(fullFilePath);
+        exportConfig.setMaxSamples(maxSamples);
+
+        new CSVExportTask().execute();
     }
 
     @OnClick(R.id.tv_folder_name)
@@ -129,25 +127,27 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
 
     @OnClick(R.id.tv_from_date)
     public void fromDatePicker(){
-        DialogUtils.buildDateTimePicker(Constants.FROM_PICKER, mFromDate, this);
+        DialogUtils.buildDateTimePicker(Constants.FROM_PICKER, exportConfig.getFromDate(), this);
     }
 
     @OnClick(R.id.tv_to_date)
     public void toDatePicker(){
-        DialogUtils.buildDateTimePicker(Constants.TO_PICKER, mToDate, this);
+        DialogUtils.buildDateTimePicker(Constants.TO_PICKER, exportConfig.getToDate(), this);
     }
 
     @OnClick(R.id.iv_remove_from_date)
     public void fromDateRemove(){
-        mFromDate = 0;
+        exportConfig.setFromDate(0);
         mFromDateTV.setText(R.string.no_date_set);
         mRemoveFromDateIV.setVisibility(View.GONE);
+        mMaxSamplesET.setEnabled(true);
     }
     @OnClick(R.id.iv_remove_to_date)
     public void toDateRemove(){
-        mToDate = 0;
+        exportConfig.setToDate(0);
         mToDateTV.setText(R.string.no_date_set);
         mRemoveToDateIV.setVisibility(View.GONE);
+        mMaxSamplesET.setEnabled(true);
     }
 
     @SuppressLint("SetTextI18n")    // Internationalization not needed here
@@ -158,55 +158,26 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
 
     // ------------------------- AUXILIARY ---------------------------
 
-    private int classifyCSVExport() {
-        try {
-            mMaxSamples = Integer.parseInt(mMaxSamplesET.getText().toString());
-        } catch (Exception ex){
-            return MALFORMED;
-        }
-
-        if(mFromDate == 0)
-            if (mToDate == 0)
-                if (mMaxSamples > 0)
-                    return ALL_WITH_MAX;        // Only MaxSamples set
-                else
-                    return ALL;                 // Nothing set
-            else
-                return MALFORMED;               // ToDate without FromDate
-        else
-            if(mToDate == 0)
-                return FROM_DATE;               // Only FromDateSet
-            else
-                return WITH_RANGE;              // Both FromDate and ToDate set
-    }
 
     // -------------------------- INTERFACE --------------------------
 
-    private void setupFolderContent(boolean updateOnly) {
-        // Get the folder path form preferences
+    private void setupFolderContent() {
+        // Get the folder path form preferences and update the UI field
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         String path = sharedPreferences.getString(Constants.CSV_FOLDER, Constants.CSV_FOLDER_ROUTE);
-
         mFolderNameTV.setText(path);
 
-        // Populate the adapter and setup the ListView
-        if(!updateOnly)
-            mFolderContentAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
-        else
-            mFolderContentAdapter.clear();
-
+        // Get all the files and save them on the adapter, make sure we have +1 or notify the user
         File[] files = new File(path).listFiles();
-
+        mFilesInFolder = new ArrayList<>();
         if(files != null)
             for (File file : files)
-                mFiles.add(file.getName());
+                mFilesInFolder.add(file.getName());
         else
-            mFiles.add(getString(R.string.no_files_in_directory));
+            mFilesInFolder.add(getString(R.string.no_files_in_directory));
 
-        mFolderContentAdapter.addAll(mFiles);
-
-        if(!updateOnly)
-            mFolderContentLV.setAdapter(mFolderContentAdapter);
+        mFolderContentLV.setAdapter(
+                new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, mFilesInFolder));
     }
 
     // -------------------------- LISTENER ---------------------------
@@ -221,7 +192,7 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
         sharedPreferences.edit().putString(Constants.CSV_FOLDER, folder.getAbsolutePath()).apply();
 
         // Setup UI
-        setupFolderContent(true);
+        setupFolderContent();
     }
     @Override
     public void onFolderChooserDismissed(@NonNull FolderChooserDialog dialog) { }
@@ -238,27 +209,31 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
         long dateLong = date.getTimeInMillis();
         switch (id){
             case Constants.FROM_PICKER:
-                mFromDate = dateLong;
+                exportConfig.setFromDate(dateLong);
                 mFromDateTV.setText(Utils.longToDateString(this, dateLong));
                 mRemoveFromDateIV.setVisibility(View.VISIBLE);
                 break;
             case Constants.TO_PICKER:
-                mToDate = dateLong;
+                exportConfig.setToDate(dateLong);
                 mToDateTV.setText(Utils.longToDateString(this, dateLong));
                 mRemoveToDateIV.setVisibility(View.VISIBLE);
                 break;
         }
 
         // Control the case when ToDate is before FromDate -> Change values
-        if(mFromDate > mToDate && mToDate != 0) {
-            long aux1 = mFromDate;
-            mFromDate = mToDate;
-            mToDate = aux1;
+        if(exportConfig.getFromDate() > exportConfig.getToDate() && exportConfig.getToDate() != 0) {
+            long aux1 = exportConfig.getFromDate();
+            exportConfig.setFromDate(exportConfig.getToDate());
+            exportConfig.setToDate(aux1);
 
             CharSequence aux2 = mFromDateTV.getText();
             mFromDateTV.setText(mToDateTV.getText());
             mToDateTV.setText(aux2);
         }
+
+        // Disable the max samples if we are using a range
+        if(exportConfig.getFromDate() > 0 && exportConfig.getToDate() > 0)
+            mMaxSamplesET.setEnabled(false);
     }
     @Override
     public void onCancelled() { }
@@ -268,6 +243,81 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
      */
     @Override
     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-        Toast.makeText(this, "PENDING", Toast.LENGTH_SHORT).show();
+        switch (which){
+            case NEUTRAL:
+                exportConfig.setConflictIndex(Constants.APPEND);
+                exportToCSV();
+                break;
+            case POSITIVE:
+                exportConfig.setConflictIndex(Constants.OVERRIDE);
+                exportToCSV();
+                break;
+            case NEGATIVE:
+                break;
+        }
+    }
+
+    private class CSVExportTask extends AsyncTask<Void, Void, String> {
+
+        // --------------------------- VALUES ----------------------------
+
+        private static final String TAG = "CSVExportTask";
+        private final int ALL = 1, FROM_DATE = 2, WITH_RANGE = 3, MALFORMED = 4;
+
+        // ------------------------- CONSTRUCTOR -------------------------
+
+        CSVExportTask() { }
+
+        // -------------------------- USE CASES --------------------------
+
+        @Override
+        protected String doInBackground(Void... voids) {
+
+            switch (classifyCSVExport(exportConfig)){
+                case ALL:
+                    CSVUtils.exportAllToCSV(exportConfig, mRealmManagerLazy.get());
+                    break;
+                case FROM_DATE:
+                    CSVUtils.exportFromDateToCSV(exportConfig, mRealmManagerLazy.get());
+                    break;
+                case WITH_RANGE:
+                    CSVUtils.exportWithTimeFrameToCSV(exportConfig, mRealmManagerLazy.get());
+                    break;
+                case MALFORMED:
+                default:
+                    return "exportToCSV: Combination not supported: " + exportConfig.getFromDate() +
+                            " " + exportConfig.getToDate() + " " + exportConfig.getMaxSamples();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String log) {
+            super.onPostExecute(log);
+
+            if(log == null){
+                ExportActivity.this.setupFolderContent();
+                ExportActivity.this.refreshName();
+                return;
+            }
+
+            Toast.makeText(ExportActivity.this, R.string.incorrect_settings, Toast.LENGTH_SHORT).show();
+            Log.e(TAG, log);
+        }
+
+        // ------------------------- AUXILIARY ---------------------------
+
+        private int classifyCSVExport(Config config) {
+            if(config.getFromDate() == 0)
+                if (config.getToDate() == 0)
+                    return ALL;                     // Nothing set
+                else
+                    return MALFORMED;               // ToDate without FromDate
+            else
+                if(config.getToDate() == 0)
+                    return FROM_DATE;               // Only FromDateSet
+                else
+                    return WITH_RANGE;              // Both FromDate and ToDate set
+        }
     }
 }
