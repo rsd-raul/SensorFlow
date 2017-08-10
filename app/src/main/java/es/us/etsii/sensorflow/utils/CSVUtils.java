@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
-
 import es.us.etsii.sensorflow.R;
 import es.us.etsii.sensorflow.domain.Config;
 import es.us.etsii.sensorflow.domain.Sample;
@@ -23,8 +22,12 @@ public abstract class CSVUtils {
     // -------------------------- USE CASES --------------------------
 
     public static Integer exportToCSV(Config exportConfig, RealmManager realmManager) {
-        Boolean response;
+        // Make sure the file has a name by checking the path doesn't end in /.csv
+        String fileName = exportConfig.getFullFilePath();
+        if(fileName.substring(fileName.length()-5, fileName.length()-4).equals(File.separator))
+            return R.string.problems_no_valid_name;
 
+        Boolean response;
         switch (classifyCSVExport(exportConfig)){
             case Constants.ALL:
                 response = CSVUtils.exportAllToCSV(exportConfig, realmManager);
@@ -54,13 +57,13 @@ public abstract class CSVUtils {
         if(config.getMaxSamples() > 0)
             samples = samples.subList(0, Math.min(config.getMaxSamples(), samples.size()));
 
-        return exportToCsv(config.getFullFilePath(), samples);
+        return exportToCsv(config, samples);
     }
 
     private static Boolean exportWithTimeFrameToCSV(Config config, RealmManager rm){
         RealmResults<Sample> samples = rm.findSamplesWithTimeFrame(config.getFromDate(),
                                                                                 config.getToDate());
-        return exportToCsv(config.getFullFilePath(), samples);
+        return exportToCsv(config, samples);
     }
 
     private static Boolean exportFromDateToCSV(Config config, RealmManager rm){
@@ -69,25 +72,26 @@ public abstract class CSVUtils {
         if(config.getMaxSamples() > 0)
             samples = samples.subList(0, Math.min(config.getMaxSamples(), samples.size()));
 
-        return exportToCsv(config.getFullFilePath(), samples);
+        return exportToCsv(config, samples);
     }
 
-    private static Boolean exportToCsv(String fullFilePath, List<Sample> samples){
+    private static Boolean exportToCsv(Config config, List<Sample> samples){
         // If we have an empty list, send null so we inform the user
         if(samples.size()==0)
             return null;
 
+        String fullFilePath = config.getFullFilePath();
+        int conflictIndex = config.getConflictIndex();
         FileWriter fileWriter;
         CSVWriter csvWriter;
-
-        // FIXME DO SOMETHING BASED ON THE CONFLICT
-        // sConflictIndex;
-
         File f = new File(fullFilePath);
 
-        // If file exists, append to it, if not, create a new one
         try {
-            fileWriter = f.exists() && !f.isDirectory() ? new FileWriter(fullFilePath, true) : new FileWriter(fullFilePath);
+            // If file already exists and , if not, create a new one
+            if(f.exists() && !f.isDirectory())
+                fileWriter = new FileWriter(fullFilePath, conflictIndex == Constants.APPEND);
+            else
+                fileWriter = new FileWriter(fullFilePath);
         } catch (IOException ex){
             Log.e(TAG, "exportToCsv: Problem creating the file writer", ex);
             return false;
@@ -102,7 +106,7 @@ public abstract class CSVUtils {
                     Constants.COLUMN_ACCELEROMETER_X,
                     Constants.COLUMN_ACCELEROMETER_Y,
                     Constants.COLUMN_ACCELEROMETER_Z};
-            csvWriter.writeNext(data);
+            csvWriter.writeNext(data, Constants.CSV_USE_QUOTES);
         }
 
         // Write samples line by line in the CSVUtils file
@@ -116,7 +120,7 @@ public abstract class CSVUtils {
                     String.valueOf(sample.getAccelerometerX()),
                     String.valueOf(sample.getAccelerometerY()),
                     String.valueOf(sample.getAccelerometerZ())};
-            csvWriter.writeNext(data);
+            csvWriter.writeNext(data, Constants.CSV_USE_QUOTES);
         }
 
         try{
@@ -132,15 +136,20 @@ public abstract class CSVUtils {
     // ------------------------- AUXILIARY ---------------------------
 
     @Constants.ExportMode private static int classifyCSVExport(Config config) {
-        if(config.getFromDate() == 0)
+//        if(config.getFullFilePath().toCharArray())
+//FIXME if fileEmpty complain
+
+
+        if(config.getFromDate() == 0) {
             if (config.getToDate() == 0)
                 return Constants.ALL;                     // Nothing set
             else
                 return Constants.MALFORMED;               // ToDate without FromDate
-        else
-        if(config.getToDate() == 0)
-            return Constants.FROM_DATE;               // Only FromDateSet
-        else
-            return Constants.WITH_RANGE;              // Both FromDate and ToDate set
+        } else {
+            if (config.getToDate() == 0)
+                return Constants.FROM_DATE;               // Only FromDateSet
+            else
+                return Constants.WITH_RANGE;              // Both FromDate and ToDate set
+        }
     }
 }

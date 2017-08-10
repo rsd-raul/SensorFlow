@@ -24,7 +24,7 @@ public abstract class Utils {
      */
     public static CharSequence getCustomTime(Context context, double totalSeconds){
 
-        // Convert totalSeconds to hours:minutes:seconds            //22304s
+        // Convert totalSeconds to hours:minutes:seconds            //22304s    example
         int totalMinutes = (int) Math.floor(totalSeconds/60);
         int hours = (int) Math.floor(totalMinutes/60.0);            //6h        21600s
         int minutes = totalMinutes%60;                              //11m       660s

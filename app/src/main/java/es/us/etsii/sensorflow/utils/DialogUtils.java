@@ -12,13 +12,25 @@ import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.afollestad.materialdialogs.folderselector.FolderChooserDialog;
 import com.appeaser.sublimepickerlibrary.helpers.SublimeOptions;
-
 import java.util.Calendar;
 import es.us.etsii.sensorflow.R;
 import es.us.etsii.sensorflow.views.ExportActivity;
 import es.us.etsii.sensorflow.views.SublimePickerFragment;
 
 public abstract class DialogUtils {
+
+    public static void waringDialog(ExportActivity activity) {
+        new MaterialDialog.Builder(activity)
+                .title(R.string.file_name_conflict)
+                .content(R.string.file_name_conflict_desc)
+                .positiveText(R.string.override)
+                .onPositive(activity)
+                .neutralText(R.string.append)
+                .onNeutral(activity)
+                .negativeText(R.string.cancel)
+                .onNegative(activity)
+                .show();
+    }
 
     public static void criticalErrorDialog(@NonNull AppCompatActivity activity, int title, int content) {
         new MaterialDialog.Builder(activity)
@@ -110,19 +122,5 @@ public abstract class DialogUtils {
 
         pickerFrag.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
         pickerFrag.show(activity.getSupportFragmentManager(), Constants.SUBLIME_PICKER);
-    }
-
-    // TODO Test warning dialog and behaviour
-    public static void waringDialog(ExportActivity activity) {
-        new MaterialDialog.Builder(activity)
-                .title(R.string.file_name_conflict)
-                .content(R.string.file_name_conflict_desc)
-                .positiveText(R.string.override)
-                .onPositive(activity)
-                .neutralText(R.string.append)
-                .onNeutral(activity)
-                .negativeText(R.string.cancel)
-                .onNegative(activity)
-                .show();
     }
 }

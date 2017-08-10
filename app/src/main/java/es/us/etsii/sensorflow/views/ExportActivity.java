@@ -10,9 +10,11 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -83,8 +85,15 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
         ButterKnife.bind(this);
         refreshName();
 
-        // Setup a simple list with the files at the default location
+        // Setup a simple list with the files at the default location and a click listener
         setupFolderContent();
+        mFolderContentLV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
+                    mFileName = mFilesInFolder.get(pos).replace(".csv", "");
+                    mFileNameET.setText(mFileName);
+                }
+            });
     }
 
     // --------------------------- STATES ----------------------------
@@ -103,7 +112,7 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
 
         mFileName = mFileNameET.getText().toString();
         exportConfig.setConflictIndex(mConflictModeSP.getSelectedItemPosition());   // ResType ignore
-        if(mFilesInFolder.contains(mFileName) && exportConfig.getConflictIndex() == Constants.WARN)
+        if(mFilesInFolder.contains(mFileName+".csv") && exportConfig.getConflictIndex() == Constants.WARN)
             DialogUtils.waringDialog(this);
         else
             exportToCSV();
@@ -171,7 +180,8 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
         mFileNameET.setText(Constants.CSV_FILE_PREFIX + System.currentTimeMillis());
     }
 
-    private void setupFolderContent() {
+    @OnClick(R.id.iv_refresh_folder)
+    public void setupFolderContent() {
         // Get the folder path form preferences and update the UI field
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         String path = sharedPreferences.getString(Constants.CSV_FOLDER, Constants.CSV_FOLDER_ROUTE);
@@ -299,7 +309,8 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
                 ExportActivity.this.refreshName();
             }
 
-            Toast.makeText(ExportActivity.this, logRes, Toast.LENGTH_SHORT).show();
+            Snackbar.make(mSaveFAB, logRes, Snackbar.LENGTH_SHORT).show();
+//            Toast.makeText(ExportActivity.this, logRes, Toast.LENGTH_SHORT).show();
         }
 
         // ------------------------- AUXILIARY ---------------------------

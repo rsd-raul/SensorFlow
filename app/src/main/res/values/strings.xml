@@ -67,7 +67,7 @@
     <string name="to">To</string>
     <string name="no_date_set">No date set</string>
     <string name="remove_date_cont_desc">Remove date</string>
-    <string name="max_samples_hint">Nothing for all samples</string>
+    <string name="max_samples_hint">All samples if empty</string>
 
     <string name="at_folder">At folder</string>
 
@@ -92,6 +92,7 @@
     <string name="file_name_without_extension">File name w/o extension</string>
     <string name="problems_storing_samples">Problems storing the Samples in the folder</string>
     <string name="problems_no_samples_found">No samples found with this conditions</string>
+    <string name="problems_no_valid_name">The file name is not valid</string>
     <string name="samples_stored">Samples stored in the folder</string>
     <string name="max_samples">Samples maximum</string>
 

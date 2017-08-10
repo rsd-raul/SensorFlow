@@ -2,11 +2,9 @@ package es.us.etsii.sensorflow.utils;
 
 import android.os.Environment;
 import android.support.annotation.IntDef;
-
 import java.io.File;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-
 import es.us.etsii.sensorflow.R;
 
 public abstract class Constants {
@@ -26,16 +24,18 @@ public abstract class Constants {
     // CSVUtils Export
 
     static final boolean HEADERS_CSV = true;
+    static final boolean CSV_USE_QUOTES = false;
     static final String COLUMN_USER = "user-id";
     static final String COLUMN_TIMESTAMP = "timestamp";
     static final String COLUMN_ACCELEROMETER_X = "acce-x";
     static final String COLUMN_ACCELEROMETER_Y = "acce-y";
     static final String COLUMN_ACCELEROMETER_Z = "acce-z";
 
-    public static final int ALL = 1, FROM_DATE = 2, WITH_RANGE = 3, MALFORMED = 4;
+    static final int ALL = 1, FROM_DATE = 2, WITH_RANGE = 3, MALFORMED = 4;
+
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({ALL, FROM_DATE, WITH_RANGE, MALFORMED})
-    public @interface ExportMode{}
+    @interface ExportMode{}
 
     // Constants:
 
@@ -45,7 +45,7 @@ public abstract class Constants {
     static final String SUBLIME_PICKER = "key4";
     public static final int FROM_PICKER = 5, TO_PICKER = 6;
 
-    public static final int WARN = 7, APPEND = 8, OVERRIDE = 9;
+    public static final int WARN = 0, APPEND = 1, OVERRIDE = 2;     // Indexes on Spinner
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({WARN, APPEND, OVERRIDE})
     public @interface ConflictMode{}
