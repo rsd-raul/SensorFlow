@@ -1,5 +1,7 @@
 package es.us.etsii.sensorflow.managers;
 
+import android.os.Process;
+
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
@@ -7,6 +9,7 @@ import es.us.etsii.sensorflow.domain.Prediction;
 import es.us.etsii.sensorflow.domain.Sample;
 import es.us.etsii.sensorflow.utils.Constants;
 import es.us.etsii.sensorflow.utils.Utils;
+import es.us.etsii.sensorflow.views.MainActivity;
 import io.realm.Realm;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
@@ -59,11 +62,10 @@ public class RealmManager {
      * @param prediction Prediction containing Samples
      */
     public void storePrediction(final Prediction prediction){
-        // FIXME Ideally async -> IllegalStateException currently
-        mRealmProvider.get().executeTransaction(new Realm.Transaction() {
+        mRealmProvider.get().executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                mRealmProvider.get().copyToRealmOrUpdate(prediction);
+                realm.copyToRealmOrUpdate(prediction);
 
                 // TODO - Testing only - Remove before delivery
 //                Log.e(TAG, "storePrediction: findAllSamples: " + findAllSamples().size());
@@ -73,6 +75,17 @@ public class RealmManager {
     }
 
     // --------------------------- DELETE ----------------------------
+
+    public static void deleteAllUserData() {
+        Realm.getDefaultInstance().executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.where(Prediction.class).findAll().deleteAllFromRealm();
+                realm.where(Sample.class).findAll().deleteAllFromRealm();
+            }
+        });
+        Process.killProcess(Process.myPid());
+    }
 
     // -------------------------- USE CASES --------------------------
 

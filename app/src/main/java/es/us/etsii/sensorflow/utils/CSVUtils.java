@@ -136,10 +136,6 @@ public abstract class CSVUtils {
     // ------------------------- AUXILIARY ---------------------------
 
     @Constants.ExportMode private static int classifyCSVExport(Config config) {
-//        if(config.getFullFilePath().toCharArray())
-//FIXME if fileEmpty complain
-
-
         if(config.getFromDate() == 0) {
             if (config.getToDate() == 0)
                 return Constants.ALL;                     // Nothing set

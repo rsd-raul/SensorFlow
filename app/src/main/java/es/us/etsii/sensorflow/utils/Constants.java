@@ -11,9 +11,9 @@ public abstract class Constants {
 
     // Configurable:
 
-    private static final int FREQUENCY_HZ = 50;
-    private static final double SAMPLE_WINDOW_S = 4.0;          // Needs 200 as sample size
-    private static final double OVERLAPPING_PERCENTAGE = 50;    // FIXME test with overlap 0
+    private static final int FREQUENCY_HZ = 50;                 // FREQ * WIND_S = SAMPLE_SIZE
+    private static final double SAMPLE_WINDOW_S = 4.0;
+    private static final double OVERLAPPING_PERCENTAGE = 50.0;
     public static final int ACTIVITY_TO_REPORT = Constants.STANDING_INDEX;
 
     public static final String CSV_FILE_PREFIX = "DataSet_";
@@ -32,7 +32,6 @@ public abstract class Constants {
     static final String COLUMN_ACCELEROMETER_Z = "acce-z";
 
     static final int ALL = 1, FROM_DATE = 2, WITH_RANGE = 3, MALFORMED = 4;
-
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({ALL, FROM_DATE, WITH_RANGE, MALFORMED})
     @interface ExportMode{}
@@ -51,17 +50,15 @@ public abstract class Constants {
     public @interface ConflictMode{}
 
     private static final int MS2US = 1000;
-    private static final double MS2S = 0.001;
     public static final int UI_REFRESH_RATE_MS = 1000;
 
     // TensorFlow Model:
 
     public static final int SAMPLE_SIZE = (int) Math.floor(FREQUENCY_HZ * SAMPLE_WINDOW_S);
-    public static final int OVERLAP_FROM_INDEX = (int) Math.ceil(SAMPLE_SIZE * (OVERLAPPING_PERCENTAGE/100));
+    public static final int OVERLAP_FROM_INDEX = SAMPLE_SIZE - (int) Math.ceil(SAMPLE_SIZE * (OVERLAPPING_PERCENTAGE/100));
     public static final int SAMPLING_PERIOD_US = Math.round((1000/FREQUENCY_HZ) * MS2US);
 
-    private static final double SAMPLING_PERIOD_S = (1000/FREQUENCY_HZ) * MS2S;
-    public static final double S_ELAPSED_PER_SAMPLE = (SAMPLE_SIZE / (100/OVERLAPPING_PERCENTAGE)) * SAMPLING_PERIOD_S;
+    public static final double S_ELAPSED_PER_SAMPLE = SAMPLE_WINDOW_S - (SAMPLE_WINDOW_S * (OVERLAPPING_PERCENTAGE/100));
 
     //FIXME: New icon for stairs_down
     public static final int[] PREDICTION_IMAGES = {R.drawable.ic_stairs_down_24dp,

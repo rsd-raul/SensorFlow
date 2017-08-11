@@ -14,10 +14,34 @@ import com.afollestad.materialdialogs.folderselector.FolderChooserDialog;
 import com.appeaser.sublimepickerlibrary.helpers.SublimeOptions;
 import java.util.Calendar;
 import es.us.etsii.sensorflow.R;
+import es.us.etsii.sensorflow.managers.AuthManager;
+import es.us.etsii.sensorflow.managers.RealmManager;
 import es.us.etsii.sensorflow.views.ExportActivity;
 import es.us.etsii.sensorflow.views.SublimePickerFragment;
 
 public abstract class DialogUtils {
+
+    public static void logoutDialog(final AppCompatActivity activity, final AuthManager authManager){
+        new MaterialDialog.Builder(activity)
+                .title(R.string.logged_out)
+                .content(R.string.logged_out_desc)
+                .positiveText(R.string.ok)
+                .negativeText(R.string.cancel)
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        authManager.init(activity);
+                    }
+                })
+                .neutralText(R.string.wipe_exit)
+                .onNeutral(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        RealmManager.deleteAllUserData();
+                    }
+                })
+                .show();
+    }
 
     public static void waringDialog(ExportActivity activity) {
         new MaterialDialog.Builder(activity)

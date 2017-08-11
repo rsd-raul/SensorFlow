@@ -10,10 +10,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -21,15 +20,14 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
 import es.us.etsii.sensorflow.R;
 import es.us.etsii.sensorflow.domain.User;
 import es.us.etsii.sensorflow.utils.Constants;
+import es.us.etsii.sensorflow.utils.DialogUtils;
 
 @Singleton
 public class AuthManager implements OnCompleteListener<AuthResult>,
-                                    GoogleApiClient.OnConnectionFailedListener,
-                                    ResultCallback<Status> {
+                                    GoogleApiClient.OnConnectionFailedListener {
 
     // --------------------------- VALUES ----------------------------
 
@@ -41,6 +39,7 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
     private FirebaseAuth mFirebaseAuth;
     private AppCompatActivity mActivity;
     private GoogleApiClient mGoogleApiClient;
+    public int SAFE = 1, UNSAFE = -1, CURRENT_STATUS = SAFE;
 
     // ------------------------- CONSTRUCTOR -------------------------
 
@@ -50,7 +49,14 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
         mFirebaseAuth = firebaseAuth;
     }
 
+    // FIXME check for Internet connection first
     public void init(AppCompatActivity activity){
+        if(CURRENT_STATUS == UNSAFE)
+            return;
+        CURRENT_STATUS = UNSAFE;
+
+        FirebaseApp.initializeApp(activity);
+
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(activity.getString(R.string.default_web_client_id))
                 .requestEmail()
@@ -92,11 +98,18 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
     }
 
     public void signOut(){
+        if(CURRENT_STATUS == UNSAFE)
+            return;
+        CURRENT_STATUS = UNSAFE;
+
         mGoogleApiClient.stopAutoManage(mActivity);
         mGoogleApiClient.disconnect();
         mFirebaseAuth.signOut();
-        Toast.makeText(mActivity, R.string.disconnected_firebase, Toast.LENGTH_SHORT).show();
         sUser = null;
+
+        CURRENT_STATUS = SAFE;
+
+        DialogUtils.logoutDialog(mActivity, this);
     }
 
     public boolean isLoggedFirebase() {
@@ -116,6 +129,7 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
             sUser = new User(user.getUid(), user.getDisplayName(), user.getEmail());
             FirebaseManager.createUser(sUser);
             Toast.makeText(mActivity, R.string.connected_firebase, Toast.LENGTH_SHORT).show();
+            CURRENT_STATUS = SAFE;
         } else
             handleConnectionFail();
     }
@@ -126,13 +140,5 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         handleConnectionFail();
-    }
-
-    /**
-     * Google Api Client logout completed
-     */
-    @Override
-    public void onResult(@NonNull Status status) {
-        // TODO offer to delete all the user data? modify interface? do nothing?
     }
 }

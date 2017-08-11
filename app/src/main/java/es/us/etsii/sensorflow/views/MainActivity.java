@@ -28,7 +28,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.FirebaseApp;
 import com.mikepenz.fastadapter.commons.adapters.FastItemAdapter;
 import java.util.List;
 import javax.inject.Inject;
@@ -78,7 +77,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     private static Prediction mPrediction;
     private static float[] sAllSensorData = new float[3];
     private boolean RUNNING = false;
-    private double mTodayExercise = -1, mTotalExercise = -1;
+    private double mTodayExercise, mTotalExercise;
 
     // ------------------------- CONSTRUCTOR -------------------------
 
@@ -144,6 +143,8 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
         // Depending on the action required, stop or start the service (and customize FAB)
         if (RUNNING) {
+            mAuthManager.CURRENT_STATUS = mAuthManager.UNSAFE;
+
             // Notify if starting without Firebase login
             if(!mAuthManager.isLoggedFirebase())
                 Toast.makeText(this, "Not reporting to Firebase", Toast.LENGTH_SHORT).show();
@@ -156,6 +157,8 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
             updateSensorValuesUI();
 
         } else {
+            mAuthManager.CURRENT_STATUS = mAuthManager.SAFE;
+
             dra = R.drawable.ic_play_24dp;
             col = R.color.tealDark;
 
@@ -190,7 +193,6 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
         mPrediction.complete(index, System.currentTimeMillis());
         mRealmManagerLazy.get().storePrediction(mPrediction);
-
 
         // Add the prediction to the list or modify it's values
         addPredictionToTodayRV(mPrediction);
@@ -228,12 +230,6 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     }
 
     // ------------------------- AUXILIARY ---------------------------
-
-    // FIXME use the DB to calculate
-    private void calculateTodayAndTotal() {
-        mTodayExercise = 0;
-        mTotalExercise = 0;
-    }
 
     private float[] mergeAndFormatData() {
         // The array Sum will be the aggregation of all the accelerometer's data
@@ -312,16 +308,14 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         currentPredictionIV.setContentDescription(currentPredictionTV.getText());
 
         // Recalculate the exercises done today in case of activity
-        if(mTodayExercise == -1 && mTotalExercise == -1)
-            calculateTodayAndTotal();
-        else if(isUserActive(eventIndex)) {
+        if(isUserActive(eventIndex)) {
             mTodayExercise += Constants.S_ELAPSED_PER_SAMPLE;
             mTotalExercise += Constants.S_ELAPSED_PER_SAMPLE;
-        }
 
-        // Update total and today's time counter
-        setCustomHHmmss(mTodayTimeTV, mTodayExercise);
-        setCustomHHmmss(mTotalTimeTV, mTotalExercise);
+            // Update total and today's time counter
+            setCustomHHmmss(mTodayTimeTV, mTodayExercise);
+            setCustomHHmmss(mTotalTimeTV, mTotalExercise);
+        }
     }
 
     private void addPredictionToTodayRV(Prediction prediction) {
@@ -363,7 +357,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         if (mPrediction.getSamples().size() == Constants.SAMPLE_SIZE)
             predictAndStoreActivity();
 
-        // TODO Review -> Can be done from mPrediction.getSamples().last()
+        // TODO -> Can be done from mPrediction.getSamples().last()
         // Store the sensor values to update the UI
         sAllSensorData[0] = sensorEvent.values[0];
         sAllSensorData[1] = sensorEvent.values[1];
@@ -399,7 +393,6 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
             // Handle sign IN and OUT
             case R.id.action_login:
                 if(!mAuthManager.isLoggedFirebase()) {
-                    FirebaseApp.initializeApp(this);    // FIXME check for Internet connection first
                     mAuthManager.init(this);            // TODO Run in background? Skipping frames...
                 } else
                     mAuthManager.signOut();

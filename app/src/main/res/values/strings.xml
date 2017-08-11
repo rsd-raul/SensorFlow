@@ -95,5 +95,9 @@
     <string name="problems_no_valid_name">The file name is not valid</string>
     <string name="samples_stored">Samples stored in the folder</string>
     <string name="max_samples">Samples maximum</string>
+    <string name="csv_export">CSV Export</string>
+    <string name="wipe_exit"><![CDATA[Wipe & Exit]]></string>
+    <string name="logged_out_desc">You have successfully logged out. Do you wish to log back</string>
+    <string name="logged_out">Successful logout</string>
 
 </resources>

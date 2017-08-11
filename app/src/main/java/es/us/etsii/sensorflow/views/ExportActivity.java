@@ -191,8 +191,8 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
         File[] files = new File(path).listFiles();
         mFilesInFolder = new ArrayList<>();
         if(files != null)
-            for (File file : files)
-                mFilesInFolder.add(file.getName());
+            for (int i = files.length-1; i >= 0; i--)
+                mFilesInFolder.add(files[i].getName());
         else
             mFilesInFolder.add(getString(R.string.no_files_in_directory));
 

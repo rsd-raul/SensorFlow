@@ -37,12 +37,13 @@
         android:allowBackup="true"
         android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".views.MainActivity">
+            android:name=".views.MainActivity"
+            android:screenOrientation="portrait">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -51,7 +52,16 @@
         </activity>
         <activity
             android:name=".views.ExportActivity"
-            android:windowSoftInputMode="stateHidden">
+            android:windowSoftInputMode="stateHidden"
+            android:label="@string/csv_export"
+            android:parentActivityName=".views.MainActivity"
+            android:screenOrientation="portrait">
+
+            <!--Meta-data is used to handle the back button, which right now is Dashboard, but it-->
+            <!--won't be forever-->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".views.MainActivity"/>
         </activity>
     </application>
 
