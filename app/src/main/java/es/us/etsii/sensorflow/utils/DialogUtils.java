@@ -17,11 +17,12 @@ import es.us.etsii.sensorflow.R;
 import es.us.etsii.sensorflow.managers.AuthManager;
 import es.us.etsii.sensorflow.managers.RealmManager;
 import es.us.etsii.sensorflow.views.ExportActivity;
+import es.us.etsii.sensorflow.views.MainActivity;
 import es.us.etsii.sensorflow.views.SublimePickerFragment;
 
 public abstract class DialogUtils {
 
-    public static void logoutDialog(final AppCompatActivity activity, final AuthManager authManager){
+    public static void logoutDialog(final MainActivity activity, final AuthManager authManager){
         new MaterialDialog.Builder(activity)
                 .title(R.string.logged_out)
                 .content(R.string.logged_out_desc)
@@ -30,7 +31,9 @@ public abstract class DialogUtils {
                 .onNegative(new MaterialDialog.SingleButtonCallback() {
                     @Override
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        authManager.init(activity);
+                        authManager.loginFirebase(activity);
+                        activity.changeMenuIcon(2, R.drawable.ic_cloud_off_24dp,
+                                R.string.firebase_log_out);
                     }
                 })
                 .neutralText(R.string.wipe_exit)

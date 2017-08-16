@@ -73,9 +73,11 @@
 
     <!-- Menu -->
 
-    <string name="firebase_login">Firebase login</string>
+    <string name="firebase_log_in">Log into Firebase</string>
+    <string name="firebase_log_out">Log into Firebase</string>
     <string name="export_to_csv">Export to CSV</string>
-
+    <string name="ui_disable">Disable UI updates</string>
+    <string name="ui_enable">Enable UI updates</string>
 
 
 
@@ -99,5 +101,7 @@
     <string name="wipe_exit"><![CDATA[Wipe & Exit]]></string>
     <string name="logged_out_desc">You have successfully logged out. Do you wish to log back</string>
     <string name="logged_out">Successful logout</string>
+    <string name="problem_try_again">A problem occurred, try again.</string>
+    <string name="not_reporting_firebase">Not reporting to Firebase</string>
 
 </resources>

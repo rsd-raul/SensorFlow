@@ -2,7 +2,6 @@ package es.us.etsii.sensorflow.managers;
 
 import android.content.Intent;
 import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -24,6 +23,7 @@ import es.us.etsii.sensorflow.R;
 import es.us.etsii.sensorflow.domain.User;
 import es.us.etsii.sensorflow.utils.Constants;
 import es.us.etsii.sensorflow.utils.DialogUtils;
+import es.us.etsii.sensorflow.views.MainActivity;
 
 @Singleton
 public class AuthManager implements OnCompleteListener<AuthResult>,
@@ -37,7 +37,7 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
 
     static User sUser = null;
     private FirebaseAuth mFirebaseAuth;
-    private AppCompatActivity mActivity;
+    private MainActivity mActivity;
     private GoogleApiClient mGoogleApiClient;
     public int SAFE = 1, UNSAFE = -1, CURRENT_STATUS = SAFE;
 
@@ -50,9 +50,11 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
     }
 
     // FIXME check for Internet connection first
-    public void init(AppCompatActivity activity){
-        if(CURRENT_STATUS == UNSAFE)
+    public void loginFirebase(MainActivity activity){
+        if(CURRENT_STATUS == UNSAFE) {
+            Toast.makeText(activity, R.string.problem_try_again, Toast.LENGTH_SHORT).show();
             return;
+        }
         CURRENT_STATUS = UNSAFE;
 
         FirebaseApp.initializeApp(activity);
@@ -98,8 +100,10 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
     }
 
     public void signOut(){
-        if(CURRENT_STATUS == UNSAFE)
+        if(CURRENT_STATUS == UNSAFE) {
+            Toast.makeText(mActivity, R.string.problem_try_again, Toast.LENGTH_SHORT).show();
             return;
+        }
         CURRENT_STATUS = UNSAFE;
 
         mGoogleApiClient.stopAutoManage(mActivity);

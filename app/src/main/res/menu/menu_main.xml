@@ -4,6 +4,12 @@
     tools:context=".views.MainActivity" >
 
     <item
+        android:id="@+id/action_interface"
+        android:icon="@drawable/ic_interface_off_24dp"
+        android:title="@string/ui_disable"
+        app:showAsAction="ifRoom"/>
+
+    <item
         android:id="@+id/action_export"
         android:icon="@drawable/ic_export_24dp"
         android:title="@string/export_to_csv"
@@ -11,8 +17,8 @@
 
     <item
         android:id="@+id/action_login"
-        android:icon="@drawable/ic_account_circle_24dp"
-        android:title="@string/firebase_login"
+        android:icon="@drawable/ic_cloud_on_24dp"
+        android:title="@string/firebase_log_in"
         app:showAsAction="ifRoom"/>
 
 </menu>

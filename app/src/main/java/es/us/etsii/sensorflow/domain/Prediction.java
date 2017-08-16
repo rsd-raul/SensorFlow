@@ -28,10 +28,6 @@ public class Prediction extends RealmObject {
         return type;
     }
 
-    public long getTimestamp() {
-        return timestamp;
-    }
-
     public RealmList<Sample> getSamples() {
         return samples;
     }

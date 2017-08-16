@@ -8,6 +8,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -76,8 +77,9 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     @Inject Provider<PredictionItem> mPredictionItemProvider;
     private static Prediction mPrediction;
     private static float[] sAllSensorData = new float[3];
-    private boolean RUNNING = false;
+    private boolean RUNNING = false, UPDATE_UI = true, mFirstTime;
     private double mTodayExercise, mTotalExercise;
+    private Menu mMenu;
 
     // ------------------------- CONSTRUCTOR -------------------------
 
@@ -95,6 +97,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         ButterKnife.bind(this);
 
         // Setup Today's recycler view using the DB
+        mTodayActivitiesRV.setHasFixedSize(true);
         mTodayActivitiesRV.setLayoutManager(
                 new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         mTodayActivitiesRV.setAdapter(mFastAdapter);
@@ -106,27 +109,9 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         mTotalExercise = mRealmManagerLazy.get().calculateActiveSecondsTotal();
         setCustomHHmmss(mTodayTimeTV, mTodayExercise);
         setCustomHHmmss(mTotalTimeTV, mTotalExercise);
-    }
 
-    // --------------------------- STATES ----------------------------
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        // If the service was running, restart it and star the UI updater
-//        registerSensorListener();
-//        updateSensorValuesUI();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-//        mSensorManager.unregisterListener(this);
-
-        // When left in background, recalculate today/total exercise
-        mTodayExercise = -1;
-        mTotalExercise = -1;
+        mAuthManager.CURRENT_STATUS = mAuthManager.SAFE;
+        new InitSensorFlowTask().execute();
     }
 
     // -------------------------- USE CASES --------------------------
@@ -140,25 +125,21 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
         // Toggle run and stop
         RUNNING = !RUNNING;
+        mFirstTime = true;
 
         // Depending on the action required, stop or start the service (and customize FAB)
         if (RUNNING) {
-            mAuthManager.CURRENT_STATUS = mAuthManager.UNSAFE;
+            dra = R.drawable.ic_stop_24dp;
+            col = R.color.redDark;
 
             // Notify if starting without Firebase login
             if(!mAuthManager.isLoggedFirebase())
-                Toast.makeText(this, "Not reporting to Firebase", Toast.LENGTH_SHORT).show();
-
-            dra = R.drawable.ic_stop_24dp;
-            col = R.color.redDark;
+                Toast.makeText(this, R.string.not_reporting_firebase, Toast.LENGTH_SHORT).show();
 
             // Start service and UI updater
             registerSensorListener();
             updateSensorValuesUI();
-
         } else {
-            mAuthManager.CURRENT_STATUS = mAuthManager.SAFE;
-
             dra = R.drawable.ic_play_24dp;
             col = R.color.tealDark;
 
@@ -197,6 +178,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         // Add the prediction to the list or modify it's values
         addPredictionToTodayRV(mPrediction);
         updateUICurrentPrediction(index);
+        mFirstTime = false;
 
         // If the user is logged into Firebase, check if the prediction is worth sending
         if(mAuthManager.isLoggedFirebase())
@@ -222,8 +204,8 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
                             return;
 
                         Event event = new Event(eventIndex, location.getLatitude(),
-                                location.getLongitude(), location.getAltitude(),
-                                location.getAccuracy(), System.currentTimeMillis());
+                                                location.getLongitude(), location.getAltitude(),
+                                                location.getAccuracy(), System.currentTimeMillis());
                         FirebaseManager.createEvent(event);
                     }
                 });
@@ -270,6 +252,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         super.onCreateOptionsMenu(menu);
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main, menu);
+        mMenu = menu;
         return true;
     }
 
@@ -283,8 +266,10 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         final Handler h = new Handler();
         h.postDelayed(new Runnable() {
             public void run() {
+
                 // Apply the same action to all the views
-                ButterKnife.apply(mSensorsInfoTVs, UPDATE_TV);
+                if (UPDATE_UI)
+                    ButterKnife.apply(mSensorsInfoTVs, UPDATE_TV);
 
                 if (RUNNING)
                     h.postDelayed(this, Constants.UI_REFRESH_RATE_MS);
@@ -300,6 +285,9 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     };
 
     private void updateUICurrentPrediction(final int eventIndex) {
+        if(!UPDATE_UI)
+            return;
+
         int activityImageRes = Constants.PREDICTION_IMAGES[eventIndex];
         int activityNameRes = Constants.PREDICTION_NAMES[eventIndex];
 
@@ -307,10 +295,13 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         currentPredictionIV.setImageResource(activityImageRes);
         currentPredictionIV.setContentDescription(currentPredictionTV.getText());
 
+        // The first time the sample doesn't have overlap, in case of activity, s_elapsed doubles
+        int firstTime2x = mFirstTime ? 2 : 1;
+
         // Recalculate the exercises done today in case of activity
         if(isUserActive(eventIndex)) {
-            mTodayExercise += Constants.S_ELAPSED_PER_SAMPLE;
-            mTotalExercise += Constants.S_ELAPSED_PER_SAMPLE;
+            mTodayExercise += Constants.S_ELAPSED_PER_SAMPLE * firstTime2x;
+            mTotalExercise += Constants.S_ELAPSED_PER_SAMPLE * firstTime2x;
 
             // Update total and today's time counter
             setCustomHHmmss(mTodayTimeTV, mTodayExercise);
@@ -319,6 +310,9 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     }
 
     private void addPredictionToTodayRV(Prediction prediction) {
+        if(!UPDATE_UI)
+            return;
+
         int itemCount = mFastAdapter.getAdapterItemCount();
 
         // Get the last item in the list if there is one
@@ -330,9 +324,14 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
             lastItem.addToTotalTime(Utils.getCustomTime(this, newTotalTime));
             mFastAdapter.notifyAdapterItemChanged(itemCount-1);
         } else {
-            CharSequence totalTime = Utils.getCustomTime(this, Constants.S_ELAPSED_PER_SAMPLE);
-            mFastAdapter.add(mPredictionItemProvider.get()
-                    .withPrediction(prediction.getType(), totalTime));
+            // The first time the sample doesn't have overlap, s_elapsed doubles
+            int firstTime2x = mFirstTime ? 2 : 1;
+            CharSequence tt = Utils.getCustomTime(this, Constants.S_ELAPSED_PER_SAMPLE * firstTime2x);
+            mFastAdapter.add(mPredictionItemProvider.get().withPrediction(prediction.getType(), tt));
+
+            // Fix for RV not updating... Weird.
+            if(itemCount == 0)
+                mTodayActivitiesRV.setAdapter(mFastAdapter);
         }
         if(mScrollS.isChecked())
             mTodayActivitiesRV.smoothScrollToPosition(itemCount);
@@ -340,6 +339,11 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
     private void setCustomHHmmss(TextView tv, double timeMs){
         tv.setText(Utils.getCustomTime(this, (int) Math.floor(timeMs)));
+    }
+
+    public void changeMenuIcon(int itemPos, int iconRes, int titleRes){
+        mMenu.getItem(itemPos).setIcon(iconRes);
+        mMenu.getItem(itemPos).setTitle(titleRes);
     }
 
     // -------------------------- LISTENER ---------------------------
@@ -357,15 +361,18 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         if (mPrediction.getSamples().size() == Constants.SAMPLE_SIZE)
             predictAndStoreActivity();
 
-        // TODO -> Can be done from mPrediction.getSamples().last()
+        // Add the prediction to the list of samples
+        mPrediction.addSample(
+                new Sample(sensorEvent.values[0], sensorEvent.values[1], sensorEvent.values[2]));
+
+        if(!UPDATE_UI)
+            return;
+
+        // TODO -> Can be done from mPrediction.getSamples().last() instead of using an array
         // Store the sensor values to update the UI
         sAllSensorData[0] = sensorEvent.values[0];
         sAllSensorData[1] = sensorEvent.values[1];
         sAllSensorData[2] = sensorEvent.values[2];
-
-        // Add the prediction to the list of samples
-        mPrediction.addSample(
-                new Sample(sensorEvent.values[0], sensorEvent.values[1], sensorEvent.values[2]));
     }
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) { /* Do nothing */ }
@@ -390,12 +397,13 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         // React depending on the item selected
         switch (item.getItemId()){
 
-            // Handle sign IN and OUT
-            case R.id.action_login:
-                if(!mAuthManager.isLoggedFirebase()) {
-                    mAuthManager.init(this);            // TODO Run in background? Skipping frames...
-                } else
-                    mAuthManager.signOut();
+            // Enable or disable the UI
+            case R.id.action_interface:
+                UPDATE_UI = !UPDATE_UI;
+                if (UPDATE_UI)
+                    changeMenuIcon(0, R.drawable.ic_interface_off_24dp, R.string.ui_disable);
+                else
+                    changeMenuIcon(0, R.drawable.ic_interface_on_24dp, R.string.ui_enable);
                 return true;
 
             // Delegate the export and config to ExportActivity
@@ -403,8 +411,42 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
                 this.startActivity(new Intent(this, ExportActivity.class));
                 return true;
 
+            // Handle sign IN and OUT
+            case R.id.action_login:
+                if (!mAuthManager.isLoggedFirebase()) {
+                    mAuthManager.loginFirebase(this);   // TODO Run in background? Skipping frames.
+                    changeMenuIcon(2, R.drawable.ic_cloud_off_24dp, R.string.firebase_log_out);
+                } else {
+                    mAuthManager.signOut();
+                    changeMenuIcon(2, R.drawable.ic_cloud_on_24dp, R.string.firebase_log_in);
+                }
+                return true;
+
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private class InitSensorFlowTask extends AsyncTask<Void, Void, Void> {
+
+        // ------------------------- CONSTRUCTOR -------------------------
+
+        InitSensorFlowTask() { }
+
+        // -------------------------- USE CASES --------------------------
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            // Fully initialize the classifier with a dummy prediction (saves 4-8s)
+            mClassifier.get().predictProbabilities(new float[600]);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void voids) {
+            super.onPostExecute(voids);
+        }
+
+        // ------------------------- AUXILIARY ---------------------------
     }
 }
