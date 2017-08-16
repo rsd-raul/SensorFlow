@@ -27,6 +27,10 @@ import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.afollestad.materialdialogs.DialogAction;
+import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.mikepenz.fastadapter.commons.adapters.FastItemAdapter;
@@ -53,10 +57,6 @@ import es.us.etsii.sensorflow.utils.Utils;
 
 public class MainActivity extends BaseActivity implements SensorEventListener {
 
-    // --------------------------- VALUES ----------------------------
-
-    private static final String TAG = "MainActivity";
-
     // ------------------------- ATTRIBUTES --------------------------
 
     @BindView(R.id.startAndStopFAB) FloatingActionButton startAndStopFAB;
@@ -78,8 +78,10 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     private static Prediction mPrediction;
     private static float[] sAllSensorData = new float[3];
     private boolean RUNNING = false, UPDATE_UI = true, mFirstTime;
+    private boolean mGoogleServicesUnavailable, mLocationPermissionsInvalid;
     private double mTodayExercise, mTotalExercise;
     private Menu mMenu;
+    private Toast mGoogleServicesToast = null;
 
     // ------------------------- CONSTRUCTOR -------------------------
 
@@ -110,6 +112,11 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         setCustomHHmmss(mTodayTimeTV, mTodayExercise);
         setCustomHHmmss(mTotalTimeTV, mTotalExercise);
 
+        // Check the services and permissions needed
+        int status = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this);
+        mGoogleServicesUnavailable = status != ConnectionResult.SUCCESS;
+        mLocationPermissionsInvalid = ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED;
         mAuthManager.CURRENT_STATUS = mAuthManager.SAFE;
         new InitSensorFlowTask().execute();
     }
@@ -188,14 +195,22 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         mPrediction.reset(Constants.OVERLAP_FROM_INDEX);
     }
 
-    private void checkIfDangerousEvent(final int eventIndex){
+    @SuppressWarnings("all")
+    private void checkIfDangerousEvent(final int eventIndex) {
         // Check if it's the particular Event we want and that we have permissions for location
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED || eventIndex != Constants.ACTIVITY_TO_REPORT)
+        if (mLocationPermissionsInvalid || eventIndex != Constants.ACTIVITY_TO_REPORT)
             return;
 
+        // Check if the device has GooglePlayServices, notify if not
+        if (mGoogleServicesUnavailable){
+            if(mGoogleServicesToast == null)
+                mGoogleServicesToast = Toast.makeText(this, R.string.no_google_services, Toast.LENGTH_SHORT);
+            mGoogleServicesToast.show();
+            return;
+        }
+
         // Request the location, once obtained, log the event in the DB
-        mFusedLocationClient.get().getLastLocation()
+        mFusedLocationClient.get().getLastLocation()                // Permissions warning - Checked
                 .addOnSuccessListener(this, new OnSuccessListener<Location>() {
                     @Override
                     public void onSuccess(Location location) {
@@ -209,6 +224,23 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
                         FirebaseManager.createEvent(event);
                     }
                 });
+    }
+
+    public void loginIntoFirebase() {
+        // Notify the user if there is no internet, offer to retry or to close the app
+        if(!Utils.isNetworkAvailable(this)) {
+            DialogUtils.noInternetDialog(MainActivity.this, new MaterialDialog.SingleButtonCallback() {
+                @Override
+                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    loginIntoFirebase();
+                }
+            });
+            return;
+        }
+
+        Toast.makeText(this, R.string.login_firebase, Toast.LENGTH_SHORT).show();
+        mAuthManager.loginFirebase(this);
+        changeMenuIcon(2, R.drawable.ic_cloud_off_24dp, R.string.firebase_log_out);
     }
 
     // ------------------------- AUXILIARY ---------------------------
@@ -368,7 +400,6 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         if(!UPDATE_UI)
             return;
 
-        // TODO -> Can be done from mPrediction.getSamples().last() instead of using an array
         // Store the sensor values to update the UI
         sAllSensorData[0] = sensorEvent.values[0];
         sAllSensorData[1] = sensorEvent.values[1];
@@ -414,8 +445,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
             // Handle sign IN and OUT
             case R.id.action_login:
                 if (!mAuthManager.isLoggedFirebase()) {
-                    mAuthManager.loginFirebase(this);   // TODO Run in background? Skipping frames.
-                    changeMenuIcon(2, R.drawable.ic_cloud_off_24dp, R.string.firebase_log_out);
+                    loginIntoFirebase();
                 } else {
                     mAuthManager.signOut();
                     changeMenuIcon(2, R.drawable.ic_cloud_on_24dp, R.string.firebase_log_in);
@@ -426,6 +456,8 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
                 return super.onOptionsItemSelected(item);
         }
     }
+
+    // ------------------------- ASYNC TASK --------------------------
 
     private class InitSensorFlowTask extends AsyncTask<Void, Void, Void> {
 

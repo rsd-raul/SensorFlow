@@ -31,7 +31,8 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
 
     // --------------------------- VALUES ----------------------------
 
-    private static final String TAG = "AuthManager";
+    public int SAFE = 1;
+    private int UNSAFE = -1;
 
     // ------------------------- ATTRIBUTES --------------------------
 
@@ -39,20 +40,24 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
     private FirebaseAuth mFirebaseAuth;
     private MainActivity mActivity;
     private GoogleApiClient mGoogleApiClient;
-    public int SAFE = 1, UNSAFE = -1, CURRENT_STATUS = SAFE;
+    public int CURRENT_STATUS = SAFE;
 
     // ------------------------- CONSTRUCTOR -------------------------
 
     @Inject
     AuthManager(FirebaseAuth firebaseAuth) {
-        // Configure Google Sign In
         mFirebaseAuth = firebaseAuth;
     }
 
-    // FIXME check for Internet connection first
+    // -------------------------- USE CASES --------------------------
+
+    public static String getUserId(){
+        return sUser != null ? sUser.getId() : "anonymous";
+    }
+
     public void loginFirebase(MainActivity activity){
         if(CURRENT_STATUS == UNSAFE) {
-            Toast.makeText(activity, R.string.problem_try_again, Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, R.string.problems_try_again, Toast.LENGTH_SHORT).show();
             return;
         }
         CURRENT_STATUS = UNSAFE;
@@ -75,15 +80,6 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
         mActivity = activity;
     }
 
-    // -------------------------- USE CASES --------------------------
-
-    public static String getUserId(){
-        if(sUser != null)
-            return sUser.getId();
-        else
-            return "anonymous";
-    }
-
     public void handleSignInResult(Intent data){
         GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
         GoogleSignInAccount acct = result.getSignInAccount();
@@ -96,12 +92,13 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
     }
 
     private void handleConnectionFail() {
-        Toast.makeText(mActivity, "PROBLEMS", Toast.LENGTH_SHORT).show();
+        Toast.makeText(mActivity, R.string.problems_try_again, Toast.LENGTH_SHORT).show();
+        CURRENT_STATUS = SAFE;
     }
 
     public void signOut(){
         if(CURRENT_STATUS == UNSAFE) {
-            Toast.makeText(mActivity, R.string.problem_try_again, Toast.LENGTH_SHORT).show();
+            Toast.makeText(mActivity, R.string.problems_try_again, Toast.LENGTH_SHORT).show();
             return;
         }
         CURRENT_STATUS = UNSAFE;
@@ -113,7 +110,7 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
 
         CURRENT_STATUS = SAFE;
 
-        DialogUtils.logoutDialog(mActivity, this);
+        DialogUtils.logoutDialog(mActivity);
     }
 
     public boolean isLoggedFirebase() {

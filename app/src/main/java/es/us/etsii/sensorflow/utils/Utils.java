@@ -3,6 +3,9 @@ package es.us.etsii.sensorflow.utils;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.support.v7.app.AppCompatActivity;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextUtils;
@@ -92,5 +95,18 @@ public abstract class Utils {
 
     public static String longToDateString(Context context, long date){
         return DateUtils.formatDateTime(context, date, DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_TIME);
+    }
+
+    /**
+     * Check whether the device is connected to the internet or not
+     *
+     * @param activity The activity you wish to check from
+     * @return true if the device is connected, false otherwise
+     */
+    public static boolean isNetworkAvailable(AppCompatActivity activity) {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 }

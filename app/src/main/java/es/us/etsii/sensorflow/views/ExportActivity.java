@@ -48,10 +48,6 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
                                                             SublimePickerFragment.SublimeCallback,
                                                             MaterialDialog.SingleButtonCallback {
 
-    // --------------------------- VALUES ----------------------------
-
-    private static final String TAG = "ExportActivity";
-
     // ------------------------- ATTRIBUTES --------------------------
 
     @BindView(R.id.lv_folder_content) ListView mFolderContentLV;
@@ -113,7 +109,7 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
         mFileName = mFileNameET.getText().toString();
         exportConfig.setConflictIndex(mConflictModeSP.getSelectedItemPosition());   // ResType ignore
         if(mFilesInFolder.contains(mFileName+".csv") && exportConfig.getConflictIndex() == Constants.WARN)
-            DialogUtils.waringDialog(this);
+            DialogUtils.nameConflictDialog(this);
         else
             exportToCSV();
     }
@@ -287,6 +283,8 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
         }
     }
 
+    // ------------------------- ASYNC TASK --------------------------
+
     private class CSVExportTask extends AsyncTask<Void, Void, Integer> {
 
         // ------------------------- CONSTRUCTOR -------------------------
@@ -310,11 +308,7 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
             }
 
             Snackbar.make(mSaveFAB, logRes, Snackbar.LENGTH_SHORT).show();
-//            Toast.makeText(ExportActivity.this, logRes, Toast.LENGTH_SHORT).show();
         }
-
-        // ------------------------- AUXILIARY ---------------------------
-
-
     }
+
 }

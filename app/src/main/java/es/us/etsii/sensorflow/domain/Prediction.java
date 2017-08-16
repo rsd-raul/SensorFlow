@@ -53,6 +53,4 @@ public class Prediction extends RealmObject {
 
         return this;
     }
-
-    // -------------------------- AUXILIARY --------------------------
 }

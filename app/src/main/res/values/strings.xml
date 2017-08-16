@@ -8,6 +8,24 @@
     <string name="disconnected_firebase">DISCONNECTED from FIREBASE</string>
     <string name="connected_firebase">CONNECTED to FIREBASE</string>
 
+    <string name="samples_stored">Samples stored in the folder</string>
+    <string name="login_firebase">Login into Firebase</string>
+    <string name="no_files_in_directory">No files in this directory</string>
+    <string name="not_reporting_firebase">Not reporting to Firebase</string>
+
+    <string name="no_network">No internet connection</string>
+    <string name="no_network_desc">Ups, it seems like you don\'t have Internet right now and we need that to log in. Check your connection and try again.</string>
+    <string name="logged_out">Successful logout</string>
+    <string name="logged_out_desc">You have successfully logged out. Wipe all your data or log back again if you need to.</string>
+    <string name="file_name_conflict">File names conflict</string>
+    <string name="file_name_conflict_desc">The file being saved shares name with a previously created one. Do you wish to override it, to append the new data to the file, or to cancel</string>
+    <string name="problems_storing_samples">Problems storing the Samples in the folder</string>
+    <string name="problems_no_samples_found">No samples found with this conditions</string>
+    <string name="problems_no_valid_name">The file name is not valid</string>
+    <string name="problems_try_again">A problem occurred, try again.</string>
+    <string name="permission_missing_sd_write">Permission missing: External Storage - Write</string>
+    <string name="incorrect_settings">Incorrect settings</string>
+
     <!-- Recognised & Format-->
 
     <string name="downstairs">Downstairs</string>
@@ -49,12 +67,13 @@
     <string name="today">Today</string>
     <string name="scroll">Scroll</string>
 
-
     <string name="file">File</string>
 
     <string name="name">Name</string>
     <string name="folder">Folder</string>
     <string name="conflict">Conflict</string>
+    <string name="append">Append</string>
+    <string name="override">Override</string>
     <string-array name="conflict_types">        <!-- Indexes stored at Constants -->
         <item>WARN</item>
         <item>APPEND</item>
@@ -63,45 +82,29 @@
 
     <string name="settings">Settings</string>
 
+    <string name="file_name_without_extension">File name w/o extension</string>
     <string name="from">From</string>
     <string name="to">To</string>
     <string name="no_date_set">No date set</string>
     <string name="remove_date_cont_desc">Remove date</string>
+    <string name="samples">Samples</string>
     <string name="max_samples_hint">All samples if empty</string>
-
+    <string name="max_samples">Samples maximum</string>
     <string name="at_folder">At folder</string>
 
     <!-- Menu -->
 
     <string name="firebase_log_in">Log into Firebase</string>
-    <string name="firebase_log_out">Log into Firebase</string>
+    <string name="firebase_log_out">Log out from Firebase</string>
     <string name="export_to_csv">Export to CSV</string>
     <string name="ui_disable">Disable UI updates</string>
     <string name="ui_enable">Enable UI updates</string>
 
 
-
     <string name="close_app">Close application</string>
-    <string name="samples">Samples</string>
     <string name="no_data">NO DATA</string>
-    <string name="no_files_in_directory">No files in this directory</string>
-    <string name="permission_missing_sd_write">Permission missing: External Storage - Write</string>
-    <string name="incorrect_settings">Incorrect settings</string>
-    <string name="append">Append</string>
-    <string name="override">Override</string>
-    <string name="file_name_conflict_desc">The file being saved shares name with a previously created one. Do you wish to override it, to append the new data to the file, or to cancel</string>
-    <string name="file_name_conflict">File names conflict</string>
-    <string name="file_name_without_extension">File name w/o extension</string>
-    <string name="problems_storing_samples">Problems storing the Samples in the folder</string>
-    <string name="problems_no_samples_found">No samples found with this conditions</string>
-    <string name="problems_no_valid_name">The file name is not valid</string>
-    <string name="samples_stored">Samples stored in the folder</string>
-    <string name="max_samples">Samples maximum</string>
-    <string name="csv_export">CSV Export</string>
+    <string name="retry">Retry</string>
     <string name="wipe_exit"><![CDATA[Wipe & Exit]]></string>
-    <string name="logged_out_desc">You have successfully logged out. Do you wish to log back</string>
-    <string name="logged_out">Successful logout</string>
-    <string name="problem_try_again">A problem occurred, try again.</string>
-    <string name="not_reporting_firebase">Not reporting to Firebase</string>
+    <string name="no_google_services">No Google Play Services available</string>
 
 </resources>

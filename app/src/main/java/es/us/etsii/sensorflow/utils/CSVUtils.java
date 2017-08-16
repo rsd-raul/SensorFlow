@@ -81,7 +81,8 @@ public abstract class CSVUtils {
             return null;
 
         String fullFilePath = config.getFullFilePath();
-        int conflictIndex = config.getConflictIndex();
+        prepareDirectory(fullFilePath);
+        boolean appendIfConflict = Constants.APPEND == config.getConflictIndex();
         FileWriter fileWriter;
         CSVWriter csvWriter;
         File f = new File(fullFilePath);
@@ -89,7 +90,7 @@ public abstract class CSVUtils {
         try {
             // If file already exists and , if not, create a new one
             if(f.exists() && !f.isDirectory())
-                fileWriter = new FileWriter(fullFilePath, conflictIndex == Constants.APPEND);
+                fileWriter = new FileWriter(fullFilePath, appendIfConflict);
             else
                 fileWriter = new FileWriter(fullFilePath);
         } catch (IOException ex){
@@ -146,6 +147,22 @@ public abstract class CSVUtils {
                 return Constants.FROM_DATE;               // Only FromDateSet
             else
                 return Constants.WITH_RANGE;              // Both FromDate and ToDate set
+        }
+    }
+
+    @SuppressWarnings("all")
+    private static void prepareDirectory(String fullFilePath){
+        int lastIndex = fullFilePath.lastIndexOf(File.separator);
+        File folder = new File(fullFilePath.substring(0, lastIndex));
+
+        // if the directory does not exist, create it
+        if (folder.exists())
+            return;
+
+        try{
+            folder.mkdir();
+        } catch(Exception ex){
+            Log.e(TAG, "prepareDirectory: Problems creating the folder to store the samples", ex);
         }
     }
 }

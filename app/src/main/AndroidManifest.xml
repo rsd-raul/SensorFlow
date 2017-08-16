@@ -3,17 +3,12 @@
     package="es.us.etsii.sensorflow">
 
     <uses-feature
-        android:name="android.hardware.sensor.gyroscope"
-        android:required="true" />
-    <uses-feature
-        android:name="android.hardware.sensor.barometer"
-        android:required="true" />
-    <uses-feature
         android:name="android.hardware.sensor.accelerometer"
         android:required="true" />
+    <!--
     <uses-feature
         android:name="android.hardware.sensor.compass"
-        android:required="true" />
+        android:required="false" />
     <uses-feature
         android:name="android.hardware.sensor.stepdetector"
         android:required="false" />
@@ -23,11 +18,17 @@
     <uses-feature
         android:name="android.hardware.sensor.hifi_sensors"
         android:required="false" />
+    <uses-feature
+        android:name="android.hardware.sensor.gyroscope"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.sensor.barometer"
+        android:required="false" />
+    -->
 
-    <!-- <uses-permission android:name="android.permission.INTERNET" /> -->
-    <!-- <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> -->
-
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- Precise -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
@@ -53,7 +54,7 @@
         <activity
             android:name=".views.ExportActivity"
             android:windowSoftInputMode="stateHidden"
-            android:label="@string/csv_export"
+            android:label="@string/export_to_csv"
             android:parentActivityName=".views.MainActivity"
             android:screenOrientation="portrait">
 

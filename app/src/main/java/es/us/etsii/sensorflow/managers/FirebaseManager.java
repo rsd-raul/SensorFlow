@@ -1,5 +1,7 @@
 package es.us.etsii.sensorflow.managers;
 
+import android.util.Log;
+
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -9,6 +11,12 @@ import es.us.etsii.sensorflow.domain.Event;
 import es.us.etsii.sensorflow.domain.User;
 
 public abstract class FirebaseManager {
+
+    // --------------------------- VALUES ----------------------------
+
+    private static final String TAG = "FirebaseManager";
+
+    // ---------------------------- SAVE -----------------------------
 
     /**
      * Create a user in our DB when the user registers for the first time
@@ -30,7 +38,8 @@ public abstract class FirebaseManager {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                // TODO warn user? postpone user creation?
+                Log.e(TAG, "onCancelled: An error occurred saving the user on firebase",
+                        databaseError.toException());
             }
         });
     }

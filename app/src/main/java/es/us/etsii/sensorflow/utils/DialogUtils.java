@@ -14,7 +14,6 @@ import com.afollestad.materialdialogs.folderselector.FolderChooserDialog;
 import com.appeaser.sublimepickerlibrary.helpers.SublimeOptions;
 import java.util.Calendar;
 import es.us.etsii.sensorflow.R;
-import es.us.etsii.sensorflow.managers.AuthManager;
 import es.us.etsii.sensorflow.managers.RealmManager;
 import es.us.etsii.sensorflow.views.ExportActivity;
 import es.us.etsii.sensorflow.views.MainActivity;
@@ -22,7 +21,20 @@ import es.us.etsii.sensorflow.views.SublimePickerFragment;
 
 public abstract class DialogUtils {
 
-    public static void logoutDialog(final MainActivity activity, final AuthManager authManager){
+    // ---------------------- MATERIAL DIALOGS -----------------------
+
+    public static void noInternetDialog(AppCompatActivity activity, MaterialDialog.SingleButtonCallback retry) {
+        new MaterialDialog.Builder(activity)
+                .title(R.string.no_network)
+                .content(R.string.no_network_desc)
+                .positiveText(R.string.retry)
+                .onPositive(retry)
+                .negativeText(R.string.cancel)
+                .cancelable(false)
+                .show();
+    }
+
+    public static void logoutDialog(final MainActivity activity){
         new MaterialDialog.Builder(activity)
                 .title(R.string.logged_out)
                 .content(R.string.logged_out_desc)
@@ -31,9 +43,7 @@ public abstract class DialogUtils {
                 .onNegative(new MaterialDialog.SingleButtonCallback() {
                     @Override
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        authManager.loginFirebase(activity);
-                        activity.changeMenuIcon(2, R.drawable.ic_cloud_off_24dp,
-                                R.string.firebase_log_out);
+                        activity.loginIntoFirebase();
                     }
                 })
                 .neutralText(R.string.wipe_exit)
@@ -46,7 +56,7 @@ public abstract class DialogUtils {
                 .show();
     }
 
-    public static void waringDialog(ExportActivity activity) {
+    public static void nameConflictDialog(ExportActivity activity) {
         new MaterialDialog.Builder(activity)
                 .title(R.string.file_name_conflict)
                 .content(R.string.file_name_conflict_desc)
@@ -70,6 +80,7 @@ public abstract class DialogUtils {
                         Process.killProcess(Process.myPid());
                     }
                 })
+                .cancelable(false)
                 .show();
     }
 
@@ -82,6 +93,8 @@ public abstract class DialogUtils {
                 .allowNewFolder(true, 0)
                 .show();
     }
+
+    // ----------------------- SUBLIME PICKER ------------------------
 
     public static void buildDateTimePicker(int id, long initialDate, ExportActivity activity){
         // Get a Date & Time picker starting in time and without range

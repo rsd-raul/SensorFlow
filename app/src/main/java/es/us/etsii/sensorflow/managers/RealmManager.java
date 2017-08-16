@@ -1,7 +1,6 @@
 package es.us.etsii.sensorflow.managers;
 
 import android.os.Process;
-
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
@@ -9,17 +8,12 @@ import es.us.etsii.sensorflow.domain.Prediction;
 import es.us.etsii.sensorflow.domain.Sample;
 import es.us.etsii.sensorflow.utils.Constants;
 import es.us.etsii.sensorflow.utils.Utils;
-import es.us.etsii.sensorflow.views.MainActivity;
 import io.realm.Realm;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
 
 @Singleton
 public class RealmManager {
-
-    // --------------------------- VALUES ----------------------------
-
-    private static final String TAG = "RealmManager";
 
     // ------------------------- ATTRIBUTES --------------------------
 
@@ -66,10 +60,6 @@ public class RealmManager {
             @Override
             public void execute(Realm realm) {
                 realm.copyToRealmOrUpdate(prediction);
-
-                // TODO - Testing only - Remove before delivery
-//                Log.e(TAG, "storePrediction: findAllSamples: " + findAllSamples().size());
-//                Log.e(TAG, "storePrediction: findAllPredictions: " + findAllPredictions().size());
             }
         });
     }

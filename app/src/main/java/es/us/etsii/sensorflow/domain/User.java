@@ -12,8 +12,6 @@ public class User {
 
     // ------------------------- CONSTRUCTOR -------------------------
 
-    public User() { }
-
     public User(String id, String name, String email) {
         this.id = id;
         this.name = name;
@@ -29,9 +27,5 @@ public class User {
 
     public String getName() {
         return name;
-    }
-
-    public String getEmail() {
-        return email;
     }
 }

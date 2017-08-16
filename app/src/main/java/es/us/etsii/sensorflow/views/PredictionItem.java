@@ -7,7 +7,6 @@ import android.widget.TextView;
 import com.mikepenz.fastadapter.items.AbstractItem;
 import java.util.List;
 import javax.inject.Inject;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import es.us.etsii.sensorflow.R;
