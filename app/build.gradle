@@ -63,7 +63,7 @@ dependencies {
     compile 'org.tensorflow:tensorflow-android:1.2.0'
 
 
-    def FIREBASE_GSM = '11.0.2'
+    def FIREBASE_GSM = '11.2.0'
 
     // Firebase - Google - https://firebase.google.com/docs/android/setup
     compile "com.google.firebase:firebase-database:$FIREBASE_GSM"
@@ -72,6 +72,7 @@ dependencies {
     // Google Play Services - Google - https://developers.google.com/android/guides/setup
     compile "com.google.android.gms:play-services-location:$FIREBASE_GSM"
     compile "com.google.android.gms:play-services-auth:$FIREBASE_GSM"
+    compile "com.google.android.gms:play-services-wearable:$FIREBASE_GSM"
 
     // ButterKnife - Jake Wharton - https://github.com/JakeWharton/butterknife
     compile 'com.jakewharton:butterknife:8.7.0'

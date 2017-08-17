@@ -1,15 +1,9 @@
-package es.us.etsii.sensorflow.domain;
+package com.raul.rsd.android.sensorflow.domain;
 
-import es.us.etsii.sensorflow.utils.PrimaryKeyFactory;
-import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
-
-public class Sample extends RealmObject {
+public class Sample {
 
     // ------------------------- ATTRIBUTES --------------------------
 
-    @PrimaryKey
-    private long id;
     private long timestamp;
     private float accelerometerX;
     private float accelerometerY;
@@ -19,26 +13,14 @@ public class Sample extends RealmObject {
 
     public Sample() { }
 
-    public Sample(long timestamp, float accelerometerX, float accelerometerY, float accelerometerZ) {
-        this.id = PrimaryKeyFactory.nextKey();
-        this.timestamp = timestamp;
+    public Sample(float accelerometerX, float accelerometerY, float accelerometerZ) {
+        this.timestamp = System.currentTimeMillis();
         this.accelerometerX = accelerometerX;
         this.accelerometerY = accelerometerY;
         this.accelerometerZ = accelerometerZ;
     }
 
-    public Sample(float accelerometerX, float accelerometerY, float accelerometerZ) {
-        this(System.currentTimeMillis(), accelerometerX, accelerometerY, accelerometerZ);
-    }
-
     // ---------------------- GETTERS & SETTERS ----------------------
-
-    public long getId() {
-        return id;
-    }
-    public void setId(long id) {
-        this.id = id;
-    }
 
     public long getTimestamp() {
         return timestamp;

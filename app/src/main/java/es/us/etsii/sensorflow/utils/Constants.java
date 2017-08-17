@@ -69,4 +69,8 @@ public abstract class Constants {
     @SuppressWarnings("all")
     public static final int STAIRS_DOWN_INDEX = 0, RUNNING_INDEX = 1, SEATED_INDEX = 2,
             STANDING_INDEX = 3, STAIRS_UP_INDEX = 4, WALKING_INDEX = 5;
+
+    // Android Wear
+
+    public static final String SAMPLES_PATH = "/sample_batch";
 }

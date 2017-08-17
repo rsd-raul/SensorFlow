@@ -1,16 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.wearable.view.BoxInsetLayout
+    android:id="@+id/container"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools" android:id="@+id/container"
-    android:layout_width="match_parent" android:layout_height="match_parent"
-    tools:context="com.raul.rsd.android.sensorflow.MainActivity" tools:deviceIds="wear">
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.raul.rsd.android.sensorflow.views.MainActivity"
+    tools:deviceIds="wear"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-    <TextView android:id="@+id/text" android:layout_width="match_parent" android:layout_height="match_parent"
-        android:text="@string/hello_world" app:layout_box="all" />
+    <TextView
+        android:id="@+id/tv_current_activity"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="@string/hello_world"
+        android:textColor="@android:color/black"
+        app:layout_box="all" />
 
-    <TextView android:id="@+id/clock" android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:layout_gravity="bottom|start" android:textColor="@android:color/white"
+    <TextView android:id="@+id/clock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:textColor="@android:color/black"
         app:layout_box="all" />
 
 </android.support.wearable.view.BoxInsetLayout>

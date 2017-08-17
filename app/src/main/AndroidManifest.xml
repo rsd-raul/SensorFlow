@@ -26,42 +26,53 @@
         android:required="false" />
     -->
 
-    <uses-permission android:name="android.permission.INTERNET" />                  <!-- Reporting -->
+    <uses-permission android:name="android.permission.INTERNET" /> <!-- Reporting -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />    <!-- CSV Export -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> <!-- CSV Export -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />                 <!-- Wear -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <!-- Wear -->
     <application
         android:name=".App"
         android:allowBackup="true"
         android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
             android:name=".views.MainActivity"
             android:screenOrientation="portrait">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
             android:name=".views.ExportActivity"
-            android:windowSoftInputMode="stateHidden"
             android:label="@string/export_to_csv"
             android:parentActivityName=".views.MainActivity"
-            android:screenOrientation="portrait">
-
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="stateHidden">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".views.MainActivity"/>
+                android:value=".views.MainActivity" />
         </activity>
+
+        <service
+            android:name=".WearableSyncService"
+            android:enabled="true"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED"/>
+            <!--<action android:name="com.google.android.gms.wearable.BIND_LISTENER"/> DEPRECATED-->
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>
