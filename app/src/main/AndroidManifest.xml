@@ -26,13 +26,13 @@
         android:required="false" />
     -->
 
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.INTERNET" />                  <!-- Reporting -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />    <!-- CSV Export -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />                 <!-- Wear -->
 
-    <!-- CSV Export -->
     <application
         android:name=".App"
         android:allowBackup="true"
@@ -58,8 +58,6 @@
             android:parentActivityName=".views.MainActivity"
             android:screenOrientation="portrait">
 
-            <!--Meta-data is used to handle the back button, which right now is Dashboard, but it-->
-            <!--won't be forever-->
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".views.MainActivity"/>
