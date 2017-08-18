@@ -46,9 +46,9 @@
         <activity
             android:name=".views.MainActivity"
             android:screenOrientation="portrait">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -58,21 +58,23 @@
             android:parentActivityName=".views.MainActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateHidden">
+
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".views.MainActivity" />
         </activity>
 
         <service
-            android:name=".WearableSyncService"
+            android:name=".wear.WearSyncService"
             android:enabled="true"
             android:exported="true">
 
+            <!--https://developers.google.com/android/reference/com/google/android/gms/wearable/WearableListenerService-->
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.DATA_CHANGED"/>
-            <!--<action android:name="com.google.android.gms.wearable.BIND_LISTENER"/> DEPRECATED-->
             </intent-filter>
         </service>
+
     </application>
 
 </manifest>

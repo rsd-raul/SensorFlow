@@ -1,19 +1,11 @@
 package com.raul.rsd.android.sensorflow.utils;
 
-public class PhoneConfig {
+public abstract class PhoneConfig {
 
-    // Configurable:
+    // Configurable (by the phone app):
 
-    private static int FREQUENCY_HZ;
-    private static double SAMPLE_WINDOW_S;
-    private static double OVERLAPPING_PERCENTAGE;
-    private static int ACTIVITY_TO_REPORT;
+    public static int FREQUENCY_HZ;
+    public static double SAMPLE_WINDOW_S;
+    public static double OVERLAPPING_PERCENTAGE;
 
-    public PhoneConfig(int frequencyHz, double sampleWindowsS, double overlappingPercentage,
-                       int activityToReport) {
-        FREQUENCY_HZ = frequencyHz;
-        SAMPLE_WINDOW_S = sampleWindowsS;
-        OVERLAPPING_PERCENTAGE = overlappingPercentage;
-        ACTIVITY_TO_REPORT = activityToReport;
-    }
 }

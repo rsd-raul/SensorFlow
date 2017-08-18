@@ -1,10 +1,15 @@
 package com.raul.rsd.android.sensorflow.utils;
 
+import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.raul.rsd.android.sensorflow.domain.Sample;
 
-public class CommunicationUtils {
+import java.nio.ByteBuffer;
+
+public abstract class DataUtils {
+
+    // -------------------------- USE CASES --------------------------
 
     public static PutDataRequest getDataRequestFromSamplesBatch(Sample[] samples) {
         // Format samples batch to be sent to the phone
@@ -29,5 +34,15 @@ public class CommunicationUtils {
         putDataMapRequest.getDataMap().putFloatArray(Constants.COLUMN_ACCELEROMETER_Z, accelerometerZs);
 
         return putDataMapRequest.asPutDataRequest();
+    }
+
+    public static int getIntFromByteArray(byte[] bytes) {
+        return ByteBuffer.wrap(bytes).getInt();
+    }
+
+    // TODO decide which parameters are necessary & implement
+    public static void setupPhoneConfigFromDataMap(DataMap dataMap) {
+        // Extract the information from the Map
+//        PhoneConfig.FREQUENCY_HZ = dataMap.getLong(Constants.COLUMN_TIMESTAMP);
     }
 }

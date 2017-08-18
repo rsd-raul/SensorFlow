@@ -73,4 +73,12 @@ public abstract class Constants {
     // Android Wear
 
     public static final String SAMPLES_PATH = "/sample_batch";
+    public static final String PREDICTION_PATH = "/current_prediction";
+    public static final String CONFIGURATION_PATH = "/phone_configuration";
+
+    // TODO don't send or store parameters not needed by the Wear App
+    public static final String COLUMN_FREQUENCY_HZ = "freq_hz";
+    public static final String COLUMN_SAMPLE_WINDOW_S = "windows_s";
+    public static final String COLUMN_OVERLAPPING_PERCENTAGE = "overlap_perc";
+
 }

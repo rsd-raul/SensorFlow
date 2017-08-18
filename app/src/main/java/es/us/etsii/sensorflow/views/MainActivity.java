@@ -479,6 +479,5 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
             super.onPostExecute(voids);
         }
 
-        // ------------------------- AUXILIARY ---------------------------
     }
 }
