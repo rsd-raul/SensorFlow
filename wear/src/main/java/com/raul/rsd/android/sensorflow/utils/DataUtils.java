@@ -3,6 +3,7 @@ package com.raul.rsd.android.sensorflow.utils;
 import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
+import com.raul.rsd.android.sensorflow.R;
 import com.raul.rsd.android.sensorflow.domain.Sample;
 
 import java.nio.ByteBuffer;
@@ -44,5 +45,24 @@ public abstract class DataUtils {
     public static void setupPhoneConfigFromDataMap(DataMap dataMap) {
         // Extract the information from the Map
 //        PhoneConfig.FREQUENCY_HZ = dataMap.getLong(Constants.COLUMN_TIMESTAMP);
+    }
+
+    public static int getActivityNameResFromIndex(@Constants.ActivityIndex int activityIndex) {
+        switch (activityIndex) {
+            case Constants.RUNNING_INDEX:
+                return R.string.jogging;
+            case Constants.SEATED_INDEX:
+                return R.string.sitting;
+            case Constants.STAIRS_DOWN_INDEX:
+                return R.string.downstairs;
+            case Constants.STAIRS_UP_INDEX:
+                return R.string.upstairs;
+            case Constants.STANDING_INDEX:
+                return R.string.standing;
+            case Constants.WALKING_INDEX:
+                return R.string.walking;
+            default:
+                return R.string.unknown;
+        }
     }
 }

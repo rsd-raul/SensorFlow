@@ -5,7 +5,7 @@ import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import es.us.etsii.sensorflow.domain.Sample;
 
-public class DataUtils {
+public abstract class DataUtils {
 
     // -------------------------- USE CASES --------------------------
 

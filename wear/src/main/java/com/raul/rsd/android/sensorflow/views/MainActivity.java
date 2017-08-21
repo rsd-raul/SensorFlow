@@ -4,14 +4,20 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.wearable.activity.WearableActivity;
+import android.util.Log;
 import android.widget.TextView;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.wearable.MessageApi;
+import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Wearable;
 import com.raul.rsd.android.sensorflow.R;
+import com.raul.rsd.android.sensorflow.utils.Constants;
+import com.raul.rsd.android.sensorflow.utils.DataUtils;
 
 public class MainActivity extends WearableActivity implements GoogleApiClient.ConnectionCallbacks,
-                                                        GoogleApiClient.OnConnectionFailedListener {
+                                                        GoogleApiClient.OnConnectionFailedListener,
+                                                        MessageApi.MessageListener {
 
     // --------------------------- VALUES ----------------------------
 
@@ -30,8 +36,7 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
         setContentView(R.layout.activity_main);
         setAmbientEnabled();
 
-        mCurrentActivity = (TextView) findViewById(R.id.tv_current_activity);
-
+        mCurrentActivity = findViewById(R.id.tv_current_activity);
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
@@ -41,6 +46,21 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
         mGoogleApiClient.connect();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    protected void onPause() {
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+            Wearable.MessageApi.removeListener(mGoogleApiClient, this);
+            mGoogleApiClient.disconnect();
+        }
+
+        super.onPause();
+    }
 
     // -------------------------- INTERFACE --------------------------
 
@@ -72,16 +92,32 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
 
     // -------------------------- LISTENER ---------------------------
 
+    /**
+     * Receives a message with the latest prediction obtained form the phone.
+     */
+    @Override
+    public void onMessageReceived(MessageEvent messageEvent) {
+        switch (messageEvent.getPath()){
+            // Prediction received from the mobile phone
+            case  Constants.PREDICTION_PATH:
+                int activityIndex = DataUtils.getIntFromByteArray(messageEvent.getData());
+                mCurrentActivity.setText(DataUtils.getActivityNameResFromIndex(activityIndex));
+                break;
+        }
+    }
+
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-
+        Wearable.MessageApi.addListener(mGoogleApiClient, this);
     }
     @Override
-    public void onConnectionSuspended(int i) {
-
+    public void onConnectionSuspended(int cause) {
+        Log.d(TAG, "onConnectionSuspended(): Connection to Google API client was suspended");
     }
     @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
+    public void onConnectionFailed(@NonNull ConnectionResult result) {
+        Log.e(TAG, "onConnectionFailed(): Failed to connect, with result: " + result);
     }
+
+
 }

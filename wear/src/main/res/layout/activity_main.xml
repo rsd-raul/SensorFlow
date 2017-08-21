@@ -13,14 +13,13 @@
         android:id="@+id/tv_current_activity"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="@string/hello_world"
         android:textColor="@android:color/black"
         app:layout_box="all" />
 
     <TextView android:id="@+id/clock"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|start"
+        android:layout_gravity="bottom|center"
         android:textColor="@android:color/black"
         app:layout_box="all" />
 

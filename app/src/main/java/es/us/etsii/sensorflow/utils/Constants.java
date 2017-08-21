@@ -66,15 +66,18 @@ public abstract class Constants {
             R.drawable.ic_stairs_up_24dp, R.drawable.ic_walk_24dp};
     public static final int[] PREDICTION_NAMES = {R.string.downstairs, R.string.jogging,
             R.string.sitting, R.string.standing, R.string.upstairs, R.string.walking};
-    @SuppressWarnings("all")
+
     public static final int STAIRS_DOWN_INDEX = 0, RUNNING_INDEX = 1, SEATED_INDEX = 2,
             STANDING_INDEX = 3, STAIRS_UP_INDEX = 4, WALKING_INDEX = 5;
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({STAIRS_DOWN_INDEX, RUNNING_INDEX, SEATED_INDEX, STANDING_INDEX, STAIRS_UP_INDEX, WALKING_INDEX})
+    public @interface ActivityIndex{}
 
     // Android Wear
 
     public static final String SAMPLES_PATH = "/sample_batch";
     public static final String PREDICTION_PATH = "/current_prediction";
-    public static final String CONFIGURATION_PATH = "/phone_configuration";
+    static final String CONFIGURATION_PATH = "/phone_configuration";
 
     // TODO don't send or store parameters not needed by the Wear App
     public static final String COLUMN_FREQUENCY_HZ = "freq_hz";

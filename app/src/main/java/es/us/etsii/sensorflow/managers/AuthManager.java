@@ -31,8 +31,7 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
 
     // --------------------------- VALUES ----------------------------
 
-    public int SAFE = 1;
-    private int UNSAFE = -1;
+    private int SAFE = 1, UNSAFE = -1;
 
     // ------------------------- ATTRIBUTES --------------------------
 
@@ -40,7 +39,7 @@ public class AuthManager implements OnCompleteListener<AuthResult>,
     private FirebaseAuth mFirebaseAuth;
     private MainActivity mActivity;
     private GoogleApiClient mGoogleApiClient;
-    public int CURRENT_STATUS = SAFE;
+    private int CURRENT_STATUS = SAFE;
 
     // ------------------------- CONSTRUCTOR -------------------------
 

@@ -12,11 +12,13 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -31,8 +33,11 @@ import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.wearable.Node;
+import com.google.android.gms.wearable.Wearable;
 import com.mikepenz.fastadapter.commons.adapters.FastItemAdapter;
 import java.util.List;
 import javax.inject.Inject;
@@ -54,6 +59,7 @@ import es.us.etsii.sensorflow.classifiers.TensorFlowClassifier;
 import es.us.etsii.sensorflow.utils.Constants;
 import es.us.etsii.sensorflow.utils.DialogUtils;
 import es.us.etsii.sensorflow.utils.Utils;
+import es.us.etsii.sensorflow.wear.WearSyncManager;
 
 public class MainActivity extends BaseActivity implements SensorEventListener {
 
@@ -82,6 +88,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     private double mTodayExercise, mTotalExercise;
     private Menu mMenu;
     private Toast mGoogleServicesToast = null;
+    private GoogleApiClient mGoogleApiClient;
 
     // ------------------------- CONSTRUCTOR -------------------------
 
@@ -117,8 +124,44 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         mGoogleServicesUnavailable = status != ConnectionResult.SUCCESS;
         mLocationPermissionsInvalid = ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED;
-        mAuthManager.CURRENT_STATUS = mAuthManager.SAFE;
         new InitSensorFlowTask().execute();
+
+        // FIXME testing
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Wearable.API)
+                .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+                    @Override
+                    public void onConnected(@Nullable Bundle bundle) {
+                        Log.e("AAAA", "onConnected: ");
+                    }
+
+                    @Override
+                    public void onConnectionSuspended(int i) {
+                        Log.e("BBBB", "onConnectionSuspended: ");
+                    }
+                })
+                .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
+                    @Override
+                    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+                        Log.e("CCCC", "onConnectionFailed: " + connectionResult.getErrorCode());
+                        Log.e("CCCC", "onConnectionFailed: " + connectionResult.getErrorMessage());
+                        Log.e("CCCC", "onConnectionFailed: " + connectionResult.getResolution());
+                    }
+                })
+                .build();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    protected void onStop() {
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected())
+            mGoogleApiClient.disconnect();
+        super.onStop();
     }
 
     // -------------------------- USE CASES --------------------------
@@ -170,9 +213,9 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         float[] results = mClassifier.get().predictProbabilities(mergeAndFormatData());
 
         // Extract from the results the index of the most probable one and set the activity
-        int index = 0;
+        @Constants.ActivityIndex int index = 0;
         float higher = Float.MIN_VALUE;
-        for (int i = 0; i < results.length; i++) {
+        for (@Constants.ActivityIndex int i = 0; i < results.length; i++) {
             if (results[i] > higher) {
                 higher = results[i];
                 index = i;
@@ -184,6 +227,8 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
         // Add the prediction to the list or modify it's values
         addPredictionToTodayRV(mPrediction);
+        // FIXME testing
+        new SendPredictionTask().execute(index);
         updateUICurrentPrediction(index);
         mFirstTime = false;
 
@@ -261,7 +306,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         return arraySum;
     }
 
-    public boolean isUserActive(int eventIndex) {
+    public boolean isUserActive(@Constants.ActivityIndex int eventIndex) {
         return eventIndex == Constants.RUNNING_INDEX || eventIndex == Constants.WALKING_INDEX ||
                eventIndex == Constants.STAIRS_UP_INDEX || eventIndex == Constants.STAIRS_DOWN_INDEX;
     }
@@ -316,7 +361,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         }
     };
 
-    private void updateUICurrentPrediction(final int eventIndex) {
+    private void updateUICurrentPrediction(@Constants.ActivityIndex final int eventIndex) {
         if(!UPDATE_UI)
             return;
 
@@ -471,6 +516,30 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
         protected Void doInBackground(Void... voids) {
             // Fully initialize the classifier with a dummy prediction (saves 4-8s)
             mClassifier.get().predictProbabilities(new float[600]);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void voids) {
+            super.onPostExecute(voids);
+        }
+
+    }
+
+    // FIXME testing
+    private class SendPredictionTask extends AsyncTask<Integer, Void, Void> {
+
+        // ------------------------- CONSTRUCTOR -------------------------
+
+        SendPredictionTask() { }
+
+        // -------------------------- USE CASES --------------------------
+
+        @Override
+        protected Void doInBackground(Integer... indexes) {
+            List<Node> nodes = WearSyncManager.getConnectedNodes(mGoogleApiClient);
+            for (Node node : nodes)
+                WearSyncManager.sendCurrentPrediction(node.getId(), indexes[0], mGoogleApiClient);
             return null;
         }
 
