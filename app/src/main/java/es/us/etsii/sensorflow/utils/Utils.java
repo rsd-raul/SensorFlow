@@ -1,10 +1,12 @@
 package es.us.etsii.sensorflow.utils;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.text.SpannableString;
 import android.text.Spanned;
@@ -12,6 +14,8 @@ import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.text.style.AbsoluteSizeSpan;
 import android.text.style.ForegroundColorSpan;
+import android.widget.Toast;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -108,5 +112,28 @@ public abstract class Utils {
                 = (ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+    public static boolean hasPermission(Context context, String... permissions) {
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+            return true;
+
+        for (String permission : permissions)
+            if(context.checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED)
+                return false;
+        return true;
+    }
+
+    public static void requestPermission(AppCompatActivity activity, int requestCode, String... permissions) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+            return;
+
+        for (String permission : permissions) {
+            if (!activity.shouldShowRequestPermissionRationale(permission))
+                continue;
+            Toast.makeText(activity, R.string.permissions_required, Toast.LENGTH_LONG).show();
+            break;
+        }
+        activity.requestPermissions(permissions, requestCode);
     }
 }

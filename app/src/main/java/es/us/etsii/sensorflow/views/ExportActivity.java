@@ -81,6 +81,10 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
         ButterKnife.bind(this);
         refreshName();
 
+        // Ask for the necessary permissions
+        if (!Utils.hasPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+            Utils.requestPermission(this, 1234, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
         // Setup a simple list with the files at the default location and a click listener
         setupFolderContent();
         mFolderContentLV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
