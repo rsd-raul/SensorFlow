@@ -5,26 +5,6 @@
     <uses-feature
         android:name="android.hardware.sensor.accelerometer"
         android:required="true" />
-    <!--
-    <uses-feature
-        android:name="android.hardware.sensor.compass"
-        android:required="false" />
-    <uses-feature
-        android:name="android.hardware.sensor.stepdetector"
-        android:required="false" />
-    <uses-feature
-        android:name="android.hardware.sensor.stepcounter"
-        android:required="false" />
-    <uses-feature
-        android:name="android.hardware.sensor.hifi_sensors"
-        android:required="false" />
-    <uses-feature
-        android:name="android.hardware.sensor.gyroscope"
-        android:required="false" />
-    <uses-feature
-        android:name="android.hardware.sensor.barometer"
-        android:required="false" />
-    -->
 
     <uses-permission android:name="android.permission.INTERNET" /> <!-- Reporting -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -52,6 +32,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".views.ExportActivity"
             android:label="@string/export_to_csv"

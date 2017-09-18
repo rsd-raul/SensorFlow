@@ -106,6 +106,7 @@
     <string name="retry">Retry</string>
     <string name="wipe_exit"><![CDATA[Wipe & Exit]]></string>
     <string name="no_google_services">No Google Play Services available</string>
+    <string name="no_google_services_desc">This app needs Google Play services for both Android Wear and Database Login, update or install Google Play Services and try again</string>
     <string name="permissions_required">Camera AND storage permission are required for this demo</string>
 
 </resources>

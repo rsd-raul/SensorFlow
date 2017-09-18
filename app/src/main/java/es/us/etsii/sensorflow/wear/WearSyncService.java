@@ -1,5 +1,7 @@
 package es.us.etsii.sensorflow.wear;
 
+import android.util.Log;
+
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataMap;
@@ -23,6 +25,8 @@ public class WearSyncService extends WearableListenerService {
 
             switch (path){
                 case Constants.SAMPLES_PATH:
+                    Log.e("WearSyncService", "onDataChanged: GETTING SAMPLES FROM WEAR");
+
                     DataMap dataMap = DataMapItem.fromDataItem(dataEvent.getDataItem()).getDataMap();
 
                     Sample[] samples = DataUtils.getSamplesBatchFromDataMap(dataMap);

@@ -1,5 +1,6 @@
 package es.us.etsii.sensorflow.utils;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -15,13 +16,16 @@ import android.text.format.DateUtils;
 import android.text.style.AbsoluteSizeSpan;
 import android.text.style.ForegroundColorSpan;
 import android.widget.Toast;
-
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import es.us.etsii.sensorflow.R;
 
 public abstract class Utils {
+
+    private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9009;
 
     /**
      * Converter and formatter from seconds to hours, minutes and seconds.
@@ -135,5 +139,16 @@ public abstract class Utils {
             break;
         }
         activity.requestPermissions(permissions, requestCode);
+    }
+
+    public static boolean hasPlayServices(Activity activity) {
+        GoogleApiAvailability googleAPI = GoogleApiAvailability.getInstance();
+        int result = googleAPI.isGooglePlayServicesAvailable(activity);
+        if(result != ConnectionResult.SUCCESS) {
+            if(googleAPI.isUserResolvableError(result))
+                googleAPI.getErrorDialog(activity, result, PLAY_SERVICES_RESOLUTION_REQUEST).show();
+            return false;
+        }
+        return true;
     }
 }

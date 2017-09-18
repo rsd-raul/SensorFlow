@@ -12,13 +12,11 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -33,11 +31,9 @@ import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.wearable.Node;
-import com.google.android.gms.wearable.Wearable;
 import com.mikepenz.fastadapter.commons.adapters.FastItemAdapter;
 import java.util.List;
 import javax.inject.Inject;
@@ -88,7 +84,6 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
     private double mTodayExercise, mTotalExercise;
     private Menu mMenu;
     private Toast mGoogleServicesToast = null;
-    private GoogleApiClient mGoogleApiClient;
 
     // ------------------------- CONSTRUCTOR -------------------------
 
@@ -126,41 +121,23 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED;
         new InitSensorFlowTask().execute();
 
-        // FIXME testing
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Wearable.API)
-                .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
-                    @Override
-                    public void onConnected(@Nullable Bundle bundle) {
-                        Log.e("AAAA", "onConnected: ");
-                    }
-
-                    @Override
-                    public void onConnectionSuspended(int i) {
-                        Log.e("BBBB", "onConnectionSuspended: ");
-                    }
-                })
-                .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
-                    @Override
-                    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-                        Log.e("CCCC", "onConnectionFailed: " + connectionResult.getErrorCode());
-                        Log.e("CCCC", "onConnectionFailed: " + connectionResult.getErrorMessage());
-                        Log.e("CCCC", "onConnectionFailed: " + connectionResult.getResolution());
-                    }
-                })
-                .build();
+        // FIXME test to integrate the mGoogleApiClient Android Wear API in the AuthManager
+        if(Utils.hasPlayServices(this))
+            mAuthManager.startGoogleApiClient(this);
+        else
+            DialogUtils.criticalErrorDialog(this, R.string.no_google_services, R.string.no_google_services_desc);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        mGoogleApiClient.connect();
+        mAuthManager.getGoogleApiClient().connect();
     }
 
     @Override
     protected void onStop() {
-        if (mGoogleApiClient != null && mGoogleApiClient.isConnected())
-            mGoogleApiClient.disconnect();
+        if (mAuthManager.getGoogleApiClient() != null && mAuthManager.getGoogleApiClient().isConnected())
+            mAuthManager.getGoogleApiClient().disconnect();
         super.onStop();
     }
 
@@ -535,11 +512,12 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
         // -------------------------- USE CASES --------------------------
 
+        // TODO check if it's correct sending the info to every node
         @Override
         protected Void doInBackground(Integer... indexes) {
-            List<Node> nodes = WearSyncManager.getConnectedNodes(mGoogleApiClient);
+            List<Node> nodes = WearSyncManager.getConnectedNodes(mAuthManager.getGoogleApiClient());
             for (Node node : nodes)
-                WearSyncManager.sendCurrentPrediction(node.getId(), indexes[0], mGoogleApiClient);
+                WearSyncManager.sendCurrentPrediction(node.getId(), indexes[0], mAuthManager.getGoogleApiClient());
             return null;
         }
 
