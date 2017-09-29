@@ -41,7 +41,7 @@ public abstract class DataUtils {
         return ByteBuffer.wrap(bytes).getInt();
     }
 
-    // TODO decide which parameters are necessary & implement
+    // TODO - Wear - decide which parameters are necessary & implement
     public static void setupPhoneConfigFromDataMap(DataMap dataMap) {
         // Extract the information from the Map
 //        PhoneConfig.FREQUENCY_HZ = dataMap.getLong(Constants.COLUMN_TIMESTAMP);

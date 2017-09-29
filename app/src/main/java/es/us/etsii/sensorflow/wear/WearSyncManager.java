@@ -29,7 +29,7 @@ public abstract class WearSyncManager {
                 .setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
                     @Override
                     public void onResult(@NonNull MessageApi.SendMessageResult sendMessageResult) {
-                        // TODO retry until a new prediction is generated or X seconds have passed?
+                        // TODO - Wear - retry until a new prediction is generated or X seconds have passed?
                         if(sendMessageResult.getStatus().isSuccess())
                             Log.d(TAG, "onResult: Current prediction successfully sent");
                         else
@@ -45,7 +45,7 @@ public abstract class WearSyncManager {
                 .setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
                     @Override
                     public void onResult(@NonNull DataApi.DataItemResult dataItemResult) {
-                        // TODO retry?
+                        // TODO - Wear - retry?
                         if(dataItemResult.getStatus().isSuccess())
                             Log.d(TAG, "onResult: Current configuration successfully stored to send");
                         else

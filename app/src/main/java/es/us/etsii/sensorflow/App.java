@@ -32,8 +32,7 @@ public class App extends Application {
         super.onCreate();
         appComponent = DaggerApp_AppComponent
                 .builder()
-                .appModule(
-                        new AppModule(this))
+                .appModule(new AppModule(this))
                 .build();
         appComponent.inject(this);
 

@@ -96,8 +96,6 @@ public class ExportActivity extends BaseActivity implements FolderChooserDialog.
             });
     }
 
-    // --------------------------- STATES ----------------------------
-
     // -------------------------- USE CASES --------------------------
 
     @SuppressWarnings("ResourceType")

@@ -30,7 +30,7 @@ public class WearSyncService extends WearableListenerService {
                     DataMap dataMap = DataMapItem.fromDataItem(dataEvent.getDataItem()).getDataMap();
 
                     Sample[] samples = DataUtils.getSamplesBatchFromDataMap(dataMap);
-                    // TODO store the samples on Realm
+                    // TODO - Wear - store the samples on Realm
                     break;
             }
         }

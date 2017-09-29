@@ -121,7 +121,6 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED;
         new InitSensorFlowTask().execute();
 
-        // FIXME test to integrate the mGoogleApiClient Android Wear API in the AuthManager
         if(Utils.hasPlayServices(this))
             mAuthManager.startGoogleApiClient(this);
         else
@@ -204,7 +203,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
         // Add the prediction to the list or modify it's values
         addPredictionToTodayRV(mPrediction);
-        // FIXME testing
+        // FIXME - Wear - testing
         new SendPredictionTask().execute(index);
         updateUICurrentPrediction(index);
         mFirstTime = false;
@@ -503,7 +502,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
     }
 
-    // FIXME testing
+    // FIXME - Wear - testing
     private class SendPredictionTask extends AsyncTask<Integer, Void, Void> {
 
         // ------------------------- CONSTRUCTOR -------------------------
@@ -512,7 +511,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener {
 
         // -------------------------- USE CASES --------------------------
 
-        // TODO check if it's correct sending the info to every node
+        // TODO - Wear - check if it's correct sending the info to every node
         @Override
         protected Void doInBackground(Integer... indexes) {
             List<Node> nodes = WearSyncManager.getConnectedNodes(mAuthManager.getGoogleApiClient());

@@ -31,7 +31,7 @@ public abstract class DataUtils {
                 (byte)value};
     }
 
-    // TODO decide which parameters are necessary & implement
+    // TODO - Wear - decide which parameters are necessary & implement
     public static PutDataRequest generateDataRequestFromConstants() {
 
         // Prepare package to send

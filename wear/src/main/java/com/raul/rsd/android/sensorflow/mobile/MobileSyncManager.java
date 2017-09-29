@@ -26,7 +26,7 @@ public abstract class MobileSyncManager {
                 .setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
                     @Override
                     public void onResult(@NonNull DataApi.DataItemResult dataItemResult) {
-                        // TODO retry?
+                        // TODO - Wear - retry?
                         if(dataItemResult.getStatus().isSuccess())
                             Log.d(TAG, "onResult: Samples batch successfully stored to send");
                         else
